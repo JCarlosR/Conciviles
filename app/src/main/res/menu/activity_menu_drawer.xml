@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_profile"
+            android:icon="@drawable/ic_account_circle"
+            android:title="Mis datos" />
+        <item
+            android:id="@+id/nav_informs"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Informes" />
+        <item
+            android:id="@+id/nav_sync"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Sincronizar" />
+    </group>
+
+    <item android:title="Más opciones">
+        <menu>
+            <item
+                android:id="@+id/nav_send"
+                android:icon="@drawable/ic_menu_send"
+                android:title="Enviar mensaje" />
+        </menu>
+    </item>
+
+</menu>
