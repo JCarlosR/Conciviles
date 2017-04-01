@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.programacionymas.conciviles.R;
+import com.programacionymas.conciviles.ui.fragment.InformsFragment;
 import com.programacionymas.conciviles.ui.fragment.ProfileFragment;
 
 public class MenuActivity extends AppCompatActivity
@@ -92,7 +93,7 @@ public class MenuActivity extends AppCompatActivity
         if (id == R.id.nav_profile) {
             fragment = new ProfileFragment();
         } else if (id == R.id.nav_informs) {
-
+            fragment = new InformsFragment();
         } else if (id == R.id.nav_sync) {
 
         } else if (id == R.id.nav_send) {

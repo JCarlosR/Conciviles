@@ -9,6 +9,8 @@ public class ProfileResponse {
     private String position;
     private String location;
 
+    private String image;
+
     public String getName() {
         return name;
     }
@@ -55,5 +57,13 @@ public class ProfileResponse {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 }

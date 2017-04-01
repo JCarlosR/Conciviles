@@ -26,12 +26,18 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
 
         etEmail = (EditText) findViewById(R.id.etEmail);
         etPassword = (EditText) findViewById(R.id.etPassword);
+
+        // Last used email in login
+        etEmail.setText(Global.getStringFromPreferences(this, "login_email"));
     }
 
     public void onClickLogin(View v)
     {
         final String email = etEmail.getText().toString();
         final String password = etPassword.getText().toString();
+
+        // Store as the last used email for login purposes
+        Global.saveStringPreference(this, "login_email", email);
 
         Call<LoginResponse> call = MyApiAdapter.getApiService().postLogin(email, password);
         call.enqueue(this);

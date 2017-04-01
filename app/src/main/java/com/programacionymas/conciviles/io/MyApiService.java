@@ -2,6 +2,9 @@ package com.programacionymas.conciviles.io;
 
 import com.programacionymas.conciviles.io.response.LoginResponse;
 import com.programacionymas.conciviles.io.response.ProfileResponse;
+import com.programacionymas.conciviles.model.Inform;
+
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -15,5 +18,8 @@ public interface MyApiService {
 
     @GET("profile")
     Call<ProfileResponse> getProfile(@Query("user_id") int user_id);
+
+    @GET("informs")
+    Call<ArrayList<Inform>> getInformsByLocationOfUser(@Query("user_id") int user_id);
 
 }

@@ -8,11 +8,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.response.ProfileResponse;
+import com.squareup.picasso.Picasso;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -21,6 +23,7 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment implements Callback<ProfileResponse> {
 
     private EditText etName, etEmail, etRol, etDepartment, etPosition, etLocation;
+    private ImageView imageView;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -47,6 +50,8 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
         etPosition = (EditText) v.findViewById(R.id.etPosition);
         etLocation = (EditText) v.findViewById(R.id.etLocation);
 
+        imageView = (ImageView) v.findViewById(R.id.imageView);
+
         return v;
     }
 
@@ -61,6 +66,7 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
     @Override
     public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
         if (response.isSuccessful()) {
+
             ProfileResponse profileResponse = response.body();
             etName.setText(profileResponse.getName());
             etEmail.setText(profileResponse.getEmail());
@@ -68,6 +74,11 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
             etDepartment.setText(profileResponse.getDepartment());
             etPosition.setText(profileResponse.getPosition());
             etLocation.setText(profileResponse.getLocation());
+
+            Picasso.with(getContext())
+                    .load(profileResponse.getImage())
+                    .placeholder(R.mipmap.logo)
+                    .into(imageView);
         }
     }
 
