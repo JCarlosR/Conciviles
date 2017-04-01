@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.ui.fragment.InformsFragment;
 import com.programacionymas.conciviles.ui.fragment.ProfileFragment;
@@ -74,6 +75,7 @@ public class MenuActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_logout) {
+            Global.saveIntPreference(this, "user_id", 0);
             finish();
             return true;
         }
