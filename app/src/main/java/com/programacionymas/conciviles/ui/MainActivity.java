@@ -22,6 +22,10 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (Global.getIntFromPreferences(this, "user_id") > 0)
+            goToMenuActivity();
+
         setContentView(R.layout.activity_main);
 
         etEmail = (EditText) findViewById(R.id.etEmail);
@@ -50,8 +54,7 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
             if (loginResponse.isSuccess()) {
                 int user_id = loginResponse.getUserId();
                 Global.saveIntPreference(this, "user_id", user_id);
-                Intent intent = new Intent(this, MenuActivity.class);
-                startActivity(intent);
+                goToMenuActivity();
             } else {
                 Global.showMessageDialog(this, "Alerta", "Los datos ingresados no coinciden con ningún usuario.");
             }
@@ -61,5 +64,10 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
     @Override
     public void onFailure(Call<LoginResponse> call, Throwable t) {
 
+    }
+
+    private void goToMenuActivity() {
+        Intent intent = new Intent(this, MenuActivity.class);
+        startActivity(intent);
     }
 }
