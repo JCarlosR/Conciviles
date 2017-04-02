@@ -54,9 +54,10 @@ public class MenuActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
+        }/* else {
+            // We are ignoring the back button
             super.onBackPressed();
-        }
+        }*/
     }
 
     @Override
