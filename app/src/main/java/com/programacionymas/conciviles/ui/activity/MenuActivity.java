@@ -1,4 +1,4 @@
-package com.programacionymas.conciviles.ui;
+package com.programacionymas.conciviles.ui.activity;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;

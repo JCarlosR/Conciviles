@@ -1,4 +1,4 @@
-package com.programacionymas.conciviles.ui;
+package com.programacionymas.conciviles.ui.activity;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;

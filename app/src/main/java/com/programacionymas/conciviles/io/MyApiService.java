@@ -3,6 +3,7 @@ package com.programacionymas.conciviles.io;
 import com.programacionymas.conciviles.io.response.LoginResponse;
 import com.programacionymas.conciviles.io.response.ProfileResponse;
 import com.programacionymas.conciviles.model.Inform;
+import com.programacionymas.conciviles.model.Report;
 
 import java.util.ArrayList;
 
@@ -22,4 +23,6 @@ public interface MyApiService {
     @GET("informs")
     Call<ArrayList<Inform>> getInformsByLocationOfUser(@Query("user_id") int user_id);
 
+    @GET("reports")
+    Call<ArrayList<Report>> getReportsByInform(@Query("inform_id") int inform_id);
 }

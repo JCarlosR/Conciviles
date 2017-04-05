@@ -38,9 +38,7 @@ public class InformsFragment extends Fragment implements Callback<ArrayList<Info
 
         View v = inflater.inflate(R.layout.fragment_informs, container, false);
 
-        recyclerView = (RecyclerView) v.findViewById(R.id.recyclerViewInforms);
-
-        setupRecyclerView();
+        setupRecyclerView(v);
 
         return v;
     }
@@ -59,13 +57,15 @@ public class InformsFragment extends Fragment implements Callback<ArrayList<Info
         call.enqueue(this);
     }
 
-    private void setupRecyclerView() {
+    private void setupRecyclerView(View v) {
+        recyclerView = (RecyclerView) v.findViewById(R.id.recyclerViewInforms);
+
         recyclerView.setHasFixedSize(true);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
 
-        adapter = new InformAdapter();
+        adapter = new InformAdapter(getContext());
         recyclerView.setAdapter(adapter);
     }
 
