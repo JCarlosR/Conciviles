@@ -1,5 +1,6 @@
 package com.programacionymas.conciviles.ui.activity;
 
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -68,6 +69,29 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
 
         adapter = new ReportAdapter(this);
         recyclerView.setAdapter(adapter);
+
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
+        {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy)
+            {
+                if (dy > 0 || dy < 0 && fab.isShown())
+                {
+                    fab.hide();
+                }
+            }
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState)
+            {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE)
+                {
+                    fab.show();
+                }
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+        });
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.programacionymas.conciviles.ui.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -67,6 +68,29 @@ public class InformsFragment extends Fragment implements Callback<ArrayList<Info
 
         adapter = new InformAdapter(getContext());
         recyclerView.setAdapter(adapter);
+
+        final FloatingActionButton fab = (FloatingActionButton) v.findViewById(R.id.fab);
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
+        {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy)
+            {
+                if (dy > 0 || dy < 0 && fab.isShown())
+                {
+                    fab.hide();
+                }
+            }
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState)
+            {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE)
+                {
+                    fab.show();
+                }
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+        });
     }
 
     @Override
