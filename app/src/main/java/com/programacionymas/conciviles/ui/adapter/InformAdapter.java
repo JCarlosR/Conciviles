@@ -64,6 +64,7 @@ public class InformAdapter extends RecyclerView.Adapter<InformAdapter.ViewHolder
 
         final String informTitle = "INFORME " + currentInform.getId();
         holder.tvInformId.setText(informTitle);
+        holder.tvUserName.setText(currentInform.getUserName());
         holder.tvCreatedAt.setText(currentInform.getCreatedAt());
         holder.tvFromDate.setText(currentInform.getFromDate());
         holder.tvToDate.setText(currentInform.getToDate());

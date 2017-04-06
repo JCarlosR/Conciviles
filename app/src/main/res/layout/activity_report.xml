@@ -10,7 +10,8 @@
     tools:context="com.programacionymas.conciviles.ui.activity.MenuActivity"
     tools:showIn="@layout/app_bar_menu">
 
-    <android.support.v4.widget.NestedScrollView xmlns:tools="http://schemas.android.com/tools"
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

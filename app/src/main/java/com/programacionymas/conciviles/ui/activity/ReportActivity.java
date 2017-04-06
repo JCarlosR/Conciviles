@@ -1,5 +1,7 @@
 package com.programacionymas.conciviles.ui.activity;
 
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,15 +22,12 @@ import retrofit2.Call;
 
 public class ReportActivity extends AppCompatActivity {
 
-
-    private TextView tvReportId, tvDescription, tvAuthorAndCreatedAt,
+    private TextView tvDescription, tvAuthorAndCreatedAt,
             tvWorkFrontName, tvAreaName, tvResponsibleName,
             tvPlannedDate, tvDeadline, tvState;
 
     private TextView tvActions, tvAspect, tvPotential,
             tvInspections, tvCriticalRisk, tvObservations;
-
-    private Button btnEditReport;
 
     private ImageView ivImage, ivImageAction;
 
@@ -43,7 +42,6 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void getViewReferences() {
-        tvReportId = (TextView) findViewById(R.id.tvReportId);
         tvDescription = (TextView) findViewById(R.id.tvDescription);
         tvAuthorAndCreatedAt = (TextView) findViewById(R.id.tvAuthorAndCreatedAt);
 
@@ -64,6 +62,20 @@ public class ReportActivity extends AppCompatActivity {
 
         ivImage = (ImageView) findViewById(R.id.ivImage);
         ivImageAction = (ImageView) findViewById(R.id.ivImageAction);
+
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nestedScrollView);
+        nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                if (scrollY > oldScrollY) {
+                    fab.hide();
+                } else {
+                    fab.show();
+                }
+            }
+        });
    }
 
     private void getReportDataFromExtras() {
