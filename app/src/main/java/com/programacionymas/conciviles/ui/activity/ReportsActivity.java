@@ -49,6 +49,11 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     }
 
     @Override
+    public void onBackPressed() {
+        // disable the back button device
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:

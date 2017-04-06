@@ -41,6 +41,11 @@ public class ReportActivity extends AppCompatActivity {
         getReportDataFromExtras();
     }
 
+    @Override
+    public void onBackPressed() {
+        // disable the back button device
+    }
+
     private void getViewReferences() {
         tvDescription = (TextView) findViewById(R.id.tvDescription);
         tvAuthorAndCreatedAt = (TextView) findViewById(R.id.tvAuthorAndCreatedAt);
