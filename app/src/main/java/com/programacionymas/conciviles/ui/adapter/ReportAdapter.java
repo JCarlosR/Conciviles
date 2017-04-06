@@ -1,6 +1,7 @@
 package com.programacionymas.conciviles.ui.adapter;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,9 +10,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
+import com.programacionymas.conciviles.ui.activity.ReportActivity;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -91,7 +94,9 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         holder.btnShowReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Intent intent = new Intent(activity, ReportActivity.class);
+                intent.putExtra("report", new Gson().toJson(currentReport));
+                activity.startActivity(intent);
             }
         });
 
