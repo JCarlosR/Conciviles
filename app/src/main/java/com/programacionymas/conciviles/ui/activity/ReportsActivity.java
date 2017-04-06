@@ -1,9 +1,11 @@
 package com.programacionymas.conciviles.ui.activity;
 
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.MenuItem;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
@@ -35,6 +37,24 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         if (inform_id > 0) {
             Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform_id);
             call.enqueue(this);
+        }
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("Informe " + inform_id);
+        }
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

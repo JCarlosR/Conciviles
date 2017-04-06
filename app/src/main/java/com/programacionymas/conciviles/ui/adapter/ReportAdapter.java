@@ -6,11 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -27,6 +29,8 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
 
         Button btnShowReport, btnEditReport;
 
+        ImageView ivImage;
+
         public ViewHolder(View v) {
             super(v);
 
@@ -39,6 +43,8 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             tvPlannedDate = (TextView) v.findViewById(R.id.tvPlannedDate);
             tvDeadline = (TextView) v.findViewById(R.id.tvDeadline);
             tvState = (TextView) v.findViewById(R.id.tvState);
+
+            ivImage = (ImageView) v.findViewById(R.id.ivImage);
 
             btnShowReport = (Button) v.findViewById(R.id.btnShowReport);
             btnEditReport = (Button) v.findViewById(R.id.btnEditReport);
@@ -69,7 +75,8 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
 
         final Report currentReport = reports.get(position);
 
-        holder.tvReportId.setText(String.valueOf(currentReport.getId()));
+        final String reportTitle = "REPORTE " + currentReport.getId();
+        holder.tvReportId.setText(reportTitle);
         holder.tvDescription.setText(currentReport.getDescription());
         holder.tvAuthorAndCreatedAt.setText(currentReport.getCreatedAt()); // what user_id name
         holder.tvWorkFrontName.setText(currentReport.getWorkFrontName());
@@ -78,6 +85,8 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         holder.tvPlannedDate.setText(currentReport.getPlannedDate());
         holder.tvDeadline.setText(currentReport.getDeadline());
         holder.tvState.setText(currentReport.getState());
+
+        Picasso.with(activity).load(currentReport.getImage()).into(holder.ivImage);
 
         holder.btnShowReport.setOnClickListener(new View.OnClickListener() {
             @Override

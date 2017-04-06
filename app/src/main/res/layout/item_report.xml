@@ -30,6 +30,11 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:text="Descripción del reporte" />
 
+        <ImageView
+            android:id="@+id/ivImage"
+            android:layout_width="wrap_content"
+            android:layout_height="145dp" />
+
         <TextView
             android:id="@+id/tvAuthorAndCreatedAt"
             android:layout_width="wrap_content"

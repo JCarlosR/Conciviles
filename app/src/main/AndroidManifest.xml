@@ -22,7 +22,8 @@
             android:name=".ui.activity.MenuActivity"
             android:label="@string/title_activity_menu"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ui.activity.ReportsActivity"></activity>
+        <activity android:name=".ui.activity.ReportsActivity" />
+        <activity android:name=".ui.activity.ReportActivity"></activity>
     </application>
 
 </manifest>
