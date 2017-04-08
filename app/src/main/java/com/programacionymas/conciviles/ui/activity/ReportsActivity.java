@@ -1,19 +1,23 @@
 package com.programacionymas.conciviles.ui.activity;
 
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.model.Report;
-import com.programacionymas.conciviles.ui.adapter.InformAdapter;
 import com.programacionymas.conciviles.ui.adapter.ReportAdapter;
+import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
 
 import java.util.ArrayList;
 
@@ -21,7 +25,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ReportsActivity extends AppCompatActivity implements Callback<ArrayList<Report>> {
+public class ReportsActivity extends AppCompatActivity implements Callback<ArrayList<Report>>, View.OnClickListener {
 
     private RecyclerView recyclerView;
     private ReportAdapter adapter;
@@ -40,12 +44,16 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
             call.enqueue(this);
         }
 
+        final String title = "Informe " + inform_id;
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(title);
+        setSupportActionBar(toolbar);
+
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle("Informe " + inform_id);
         }
-
     }
 
     @Override
@@ -97,6 +105,8 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
                 super.onScrollStateChanged(recyclerView, newState);
             }
         });
+
+        fab.setOnClickListener(this);
     }
 
     @Override
@@ -110,5 +120,29 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     @Override
     public void onFailure(Call<ArrayList<Report>> call, Throwable t) {
         Global.showMessageDialog(this, "Error", "No se han podido obtener los reportes del informe seleccionado.");
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.fab:
+                showDialogNewReport();
+                break;
+        }
+    }
+
+    private void showDialogNewReport() {
+        // Log.d("ReportsActivity", "showDialogNewReport fired");
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // Empty report_id => Register new report
+        ReportDialogFragment newFragment = ReportDialogFragment.newInstance("");
+
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        transaction.add(android.R.id.content, newFragment)
+                .addToBackStack(null).commit();
+
     }
 }

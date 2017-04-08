@@ -1,19 +1,49 @@
 <resources>
+
     <string name="app_name">Conciviles</string>
     <string name="title_activity_menu">Panel de On Duty</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="action_save">Guardar</string>
     <string name="action_logout">Cerrar sesión</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
+    <!-- User data -->
     <string name="full_name">Nombre completo</string>
     <string name="email">E-mail</string>
     <string name="rol">Rol</string>
     <string name="department">Departamento</string>
     <string name="position">Cargo</string>
     <string name="location">Localización</string>
+
+    <!-- Report data -->
+    <string name="report_description">Descripción</string>
+    <string name="report_planned_date">Fecha planificada</string>
+    <string name="report_deadline">Fecha de cierre</string>
+    <string name="report_actions">Acciones a tomar</string>
+    <string name="report_inspections"># Inspecciones</string>
+    <string name="report_observations">Observaciones</string>
+
+    <!-- Error messages -->
+    <string name="error_description">Es necesario ingresar una descripción</string>
+
+    <!-- Spinner options -->
+
+    <string-array name="aspect_options">
+        <item>Por mejorar</item>
+        <item>Positivo</item>
+    </string-array>
+
+    <string-array name="potential_options">
+        <item>Alto</item>
+        <item>Medio</item>
+        <item>Bajo</item>
+    </string-array>
+
+    <string-array name="state_options">
+        <item>Abierto</item>
+        <item>Cerrado</item>
+    </string-array>
+
 </resources>
