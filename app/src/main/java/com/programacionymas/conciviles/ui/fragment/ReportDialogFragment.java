@@ -1,15 +1,28 @@
 package com.programacionymas.conciviles.ui.fragment;
 
+import android.Manifest;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,11 +34,14 @@ import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.model.Area;
 import com.programacionymas.conciviles.model.CriticalRisk;
 import com.programacionymas.conciviles.model.User;
@@ -38,6 +54,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.app.Activity.RESULT_OK;
+
 public class ReportDialogFragment extends DialogFragment implements View.OnClickListener {
 
     private EditText etDescription, etActions, etInspections, etObservations;
@@ -47,21 +65,44 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
 
     private ImageButton btnTakeImage, btnTakeImageAction;
     private Spinner spinnerWorkFront, spinnerArea, spinnerResponsible, spinnerCriticalRisk;
+    private Spinner spinnerState, spinnerAspect, spinnerPotential;
+
+    private ImageView ivImage, ivImageAction;
 
     // Selected report to edit (or empty for new reports)
-    private String report_id;
+    private int report_id;
+    // Inform container
+    private int inform_id;
 
     // Spinner options
     private ArrayList<WorkFront> workFronts;
     private ArrayList<Area> areas;
-    private ArrayList<User> responsibles;
+    private ArrayList<User> responsibleUsers;
     private ArrayList<CriticalRisk> criticalRisks;
 
-    public static ReportDialogFragment newInstance(String report_id) {
+    // Request codes
+    private static final int REQUEST_CAMERA_PERMISSION = 10;
+    private static final int REQUEST_CAMERA = 20;
+    private static final int SELECT_FILE = 21;
+
+    // Default extension for images (using camera)
+    // private static final String DEFAULT_EXTENSION = "jpg";
+
+    // Location of the last photo taken
+    // private static String currentPhotoPath;
+
+    // Image view that will be filled with the taken photo / selected image
+    private ImageView ivTarget;
+
+    // Images stored as base64
+    private String image, imageAction;
+
+    public static ReportDialogFragment newInstance(int inform_id, int report_id) {
         ReportDialogFragment f = new ReportDialogFragment();
 
         Bundle args = new Bundle();
-        args.putString("report_id", report_id);
+        args.putInt("inform_id", inform_id);
+        args.putInt("report_id", report_id);
         f.setArguments(args);
 
         return f;
@@ -70,7 +111,9 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        report_id = getArguments().getString("report_id");
+
+        inform_id = getArguments().getInt("inform_id");
+        report_id = getArguments().getInt("report_id");
     }
 
     @Override
@@ -81,7 +124,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         // etId = (EditText) view.findViewById(R.id.etId);
 
         String title;
-        if (report_id.isEmpty())
+        if (report_id == 0)
             title = "Nuevo reporte";
         else {
             title = "Editar reporte";
@@ -121,12 +164,23 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         spinnerResponsible = (Spinner) view.findViewById(R.id.spinnerResponsible);
         spinnerCriticalRisk = (Spinner) view.findViewById(R.id.spinnerCriticalRisk);
 
+        // spinner with predefined options
+        spinnerState = (Spinner) view.findViewById(R.id.spinnerState);
+        spinnerAspect = (Spinner) view.findViewById(R.id.spinnerAspect);
+        spinnerPotential = (Spinner) view.findViewById(R.id.spinnerPotential);
+
         // load spinner data
         fetchSpinnerDataFromServer();
 
         // buttons to capture photos or pick images from gallery
         btnTakeImage = (ImageButton) view.findViewById(R.id.btnTakeImage);
+        btnTakeImage.setOnClickListener(this);
         btnTakeImageAction = (ImageButton) view.findViewById(R.id.btnTakeImageAction);
+        btnTakeImageAction.setOnClickListener(this);
+
+        // image view references
+        ivImage = (ImageView) view.findViewById(R.id.ivImage);
+        ivImageAction = (ImageView) view.findViewById(R.id.ivImageAction);
 
         return view;
     }
@@ -173,8 +227,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             @Override
             public void onResponse(Call<ArrayList<User>> call, Response<ArrayList<User>> response) {
                 if (response.isSuccessful()) {
-                    responsibles = response.body();
-                    populateResponsibleSpinner(responsibles);
+                    responsibleUsers = response.body();
+                    populateResponsibleSpinner(responsibleUsers);
                 }
             }
 
@@ -264,7 +318,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             validateForm();
             return true;
         } else if (id == android.R.id.home) {
-            getDialog().dismiss();
+            dismiss();
             return true;
         }
 
@@ -281,6 +335,15 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             case R.id.etDeadline:
                 showDatePickerDialog(etDeadline);
                 break;
+
+            case R.id.btnTakeImage:
+                ivTarget = ivImage;
+                takeImage();
+                break;
+            case R.id.btnTakeImageAction:
+                ivTarget = ivImageAction;
+                takeImage();
+                break;
         }
     }
 
@@ -289,7 +352,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                 // +1 because january is zero
-                final String selectedDate = twoDigits(day) + " / " + twoDigits(month+1) + " / " + year;
+                final String selectedDate = year + "-" + twoDigits(month+1) + "-" + twoDigits(day);
                 editText.setText(selectedDate);
             }
         });
@@ -301,7 +364,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
     }
 
     private boolean validateEditText(EditText editText, TextInputLayout textInputLayout, int errorString) {
-        if (editText.getText().toString().trim().isEmpty()) {
+        Log.d("ReportDialogFragment", "Validating an EditText with this value => " + editText.getText().toString());
+        if (editText.getText().toString().length() < 1) {
             textInputLayout.setError(getString(errorString));
             return false;
         } else {
@@ -320,6 +384,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             return;
         }
 
+        // Log.d("ReportDialogFragment", "Validations passed");
+
         // get edit text values
 
         final String description = etDescription.getText().toString().trim();
@@ -327,36 +393,227 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         final String inspections = etInspections.getText().toString().trim();
         final String observations = etObservations.getText().toString().trim();
 
+        // get date values
+        final String planned_date = etPlannedDate.getText().toString().trim();
+        final String deadline = etDeadline.getText().toString().trim();
+
         // get spinner values
 
         final int workFrontIndex = Global.getSpinnerIndex(spinnerWorkFront);
         final int workFront = workFronts.get(workFrontIndex).getId();
 
         final int areaIndex = Global.getSpinnerIndex(spinnerArea);
-        final int area = areas.get(workFrontIndex).getId();
+        final int area = areas.get(areaIndex).getId();
 
         final int responsibleIndex = Global.getSpinnerIndex(spinnerResponsible);
-        final int responsible = responsibles.get(responsibleIndex).getId();
+        final int responsible = responsibleUsers.get(responsibleIndex).getId();
 
         final int criticalRiskIndex = Global.getSpinnerIndex(spinnerCriticalRisk);
         final int criticalRisk= criticalRisks.get(criticalRiskIndex).getId();
 
-        // If the report ID is empty, create a new record
-        if (report_id.isEmpty()) {
+        final String state = spinnerState.getSelectedItem().toString();
+        final String aspect = spinnerAspect.getSelectedItem().toString();
+        final String potential = spinnerPotential.getSelectedItem().toString();
+
+        // If the report ID is ZERO, create a new record
+        if (report_id == 0) {
+            Log.d("ReportDialogFragment", "Going to post a new report");
             final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
 
-            /*Call<SimpleResponse> call = MyApiAdapter.getApiService().postStoreReport(
-                    local, ubicacion, responsable, cargo, oficina,
-                    ambiente, area, activo, observacion, inventariador
-            );
-            // call.enqueue(new RegistrarHojaCallback());*/
+            Call<NewReportResponse> call;
+
+            if ((image == null || image.isEmpty()) && (imageAction == null || imageAction.isEmpty())) {
+                call = MyApiAdapter.getApiService().postNewReport(
+                        user_id, description, workFront, area, responsible,
+                        planned_date, deadline,
+                        state, actions, aspect, potential, inspections,
+                        criticalRisk, observations, inform_id
+                );
+
+            } else {
+                call = MyApiAdapter.getApiService().postNewReportWithImages(
+                        user_id, description, image, workFront, area, responsible,
+                        planned_date, deadline,
+                        state, actions, imageAction, aspect, potential, inspections,
+                        criticalRisk, observations, inform_id
+                );
+
+            }
+
+            call.enqueue(new Callback<NewReportResponse>() {
+                @Override
+                public void onResponse(Call<NewReportResponse> call, Response<NewReportResponse> response) {
+                    if (response.isSuccessful()) {
+                        NewReportResponse newReportResponse = response.body();
+                        if (newReportResponse.isSuccess()) {
+                            Toast.makeText(getActivity(), "El reporte se ha registrado satisfactoriamente.", Toast.LENGTH_SHORT).show();
+                            dismiss();
+                        } else {
+                            Toast.makeText(getActivity(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<NewReportResponse> call, Throwable t) {
+                    Log.d("ReportDialogFragment", "onFailure => " + t.getLocalizedMessage());
+                }
+            });
         } /*else { // edit the selected report
             Call<SimpleResponse> call = MyApiAdapter.getApiService().postUpdateReport(
                     id, local, ubicacion, responsable, cargo, oficina,
                     ambiente, area, activo, observacion
             );
-            // call.enqueue(new EditarHojaCallback());
+            // call.enqueue();
         }*/
+    }
+
+    private void takeImage() {
+        // Options for the alert dialog
+        final CharSequence[] items = {
+                getResources().getString(R.string.picture_from_camera),
+                getResources().getString(R.string.picture_from_gallery),
+                getResources().getString(R.string.picture_cancel)
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+        // Title
+        builder.setTitle(getResources().getString(R.string.picture_title));
+
+        // Actions
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int option) {
+
+                if (option == 0) {
+
+                    // check for permission for newer APIs
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is TRUE");
+                        if (getActivity().checkSelfPermission(Manifest.permission.CAMERA)
+                                == PackageManager.PERMISSION_GRANTED) {
+                            // permission granted
+                            Log.d("ReportDialogFragment", "Camera permission already granted");
+                            startCameraIntent();
+                        } else {
+                            Log.d("ReportDialogFragment", "Request camera permission fired");
+                            // request camera permission
+                            requestPermissions(new String[]{Manifest.permission.CAMERA},
+                                    REQUEST_CAMERA_PERMISSION);
+                        }
+                    } else {
+                        Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is FALSE");
+                        // old APIs doesn't require to check for camera permission
+                        startCameraIntent();
+                    }
+
+                } else if (option == 1) {
+                    Intent intent = new Intent(
+                            Intent.ACTION_PICK,
+                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    intent.setType("image/*");
+                    final String chooserTitle = getResources().getString(R.string.picture_chooser_title);
+                    startActivityForResult(Intent.createChooser(intent, chooserTitle), SELECT_FILE);
+                } else if (option == 2) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        builder.show();
+
+    }
+
+    private void startCameraIntent() {
+        // Create the File where the photo should go
+        /*File photoFile;
+        try {
+            photoFile = createDestinationFile();
+        } catch (IOException ex) {
+            return;
+        }*/
+
+        // Continue only if the File was successfully created
+        /*if (photoFile != null) {*/
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            // takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+            startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+        //}
+    }
+
+    /*private File createDestinationFile() throws IOException {
+        // Path for the temporary image and its name
+        final File storageDirectory = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        final String imageFileName = "" + System.currentTimeMillis();
+
+        File image = File.createTempFile(
+                imageFileName,          // prefix
+                "." + DEFAULT_EXTENSION, // suffix
+                storageDirectory              // directory
+        );
+
+        // Save a the file path
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }*/
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_CAMERA) {
+                // Get the thumbnail from extras
+                Bitmap photo = (Bitmap) data.getExtras().get("data");
+                ivTarget.setImageBitmap(photo);
+
+                if (ivTarget == ivImage)
+                    image = Global.getBase64FromBitmap(photo);
+                else
+                    imageAction = Global.getBase64FromBitmap(photo);
+                /*Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath);
+
+                boolean deleted = new File(currentPhotoPath).delete();
+                if (! deleted)
+                    Log.d("ReportDialogFragment", "Cannot delete file: " + currentPhotoPath);*/
+            } else if (requestCode == SELECT_FILE) {
+                Uri selectedImageUri = data.getData();
+                String[] projection = {MediaStore.MediaColumns.DATA};
+                CursorLoader cursorLoader = new CursorLoader(getActivity(),
+                        selectedImageUri, projection, null, null, null);
+                Cursor cursor = cursorLoader.loadInBackground();
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+                cursor.moveToFirst();
+                String selectedImagePath = cursor.getString(columnIndex);
+
+                // Get the extension from the full path
+                // final int lastDot = selectedImagePath.lastIndexOf(".");
+                // final String extension = selectedImagePath.substring(lastDot+1);
+
+                Bitmap bitmap = BitmapFactory.decodeFile(selectedImagePath);
+                ivTarget.setImageBitmap(bitmap);
+
+                if (ivTarget == ivImage)
+                    image = Global.getBase64FromBitmap(bitmap);
+                else
+                    imageAction = Global.getBase64FromBitmap(bitmap);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Now user should be able to use camera
+                startCameraIntent();
+            } else {
+                // Your app will not have this permission.
+                Global.showMessageDialog(getActivity(), "Alerta", "No podrás subir capturar fotos con la cámara hasta que otorgues este permiso a la aplicación.");
+            }
+        }
     }
 
 }

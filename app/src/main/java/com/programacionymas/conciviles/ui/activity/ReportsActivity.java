@@ -30,14 +30,18 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     private RecyclerView recyclerView;
     private ReportAdapter adapter;
 
+    private int inform_id;
+    private boolean inform_editable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reports);
 
-        setupRecyclerView();
+        inform_id = getIntent().getIntExtra("inform_id", 0);
+        inform_editable = getIntent().getBooleanExtra("inform_editable", false);
 
-        final int inform_id = getIntent().getIntExtra("inform_id", 0);
+        setupRecyclerView();
 
         if (inform_id > 0) {
             Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform_id);
@@ -85,28 +89,35 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
-        {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy)
+        if (inform_editable) {
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
             {
-                if (dy > 0 || dy < 0 && fab.isShown())
+                @Override
+                public void onScrolled(RecyclerView recyclerView, int dx, int dy)
                 {
-                    fab.hide();
+                    if (dy > 0 || dy < 0 && fab.isShown())
+                    {
+                        fab.hide();
+                    }
                 }
-            }
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState)
-            {
-                if (newState == RecyclerView.SCROLL_STATE_IDLE)
+                @Override
+                public void onScrollStateChanged(RecyclerView recyclerView, int newState)
                 {
-                    fab.show();
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE)
+                    {
+                        fab.show();
+                    }
+                    super.onScrollStateChanged(recyclerView, newState);
                 }
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-        });
+            });
 
-        fab.setOnClickListener(this);
+            fab.setOnClickListener(this);
+            fab.setVisibility(View.VISIBLE);
+        } else {
+            fab.setVisibility(View.GONE);
+        }
+
+
     }
 
     @Override
@@ -137,7 +148,7 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         FragmentManager fragmentManager = getSupportFragmentManager();
 
         // Empty report_id => Register new report
-        ReportDialogFragment newFragment = ReportDialogFragment.newInstance("");
+        ReportDialogFragment newFragment = ReportDialogFragment.newInstance(inform_id, 0);
 
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);

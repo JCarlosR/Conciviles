@@ -17,6 +17,7 @@ public class Inform {
     private String to_date_format;
     private String created_at;
     private String user_name;
+    private boolean isEditable;
 
     public int getUserId() {
         return user_id;
@@ -64,5 +65,13 @@ public class Inform {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public boolean isEditable() {
+        return isEditable;
+    }
+
+    public void setEditable(boolean editable) {
+        isEditable = editable;
     }
 }

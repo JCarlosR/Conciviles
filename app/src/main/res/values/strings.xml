@@ -56,4 +56,11 @@
         <item>Cerrado</item>
     </string-array>
 
+    <!-- Take image options -->
+    <string name="picture_title">Imagen</string>
+    <string name="picture_from_camera">Capturar foto</string>
+    <string name="picture_from_gallery">Seleccionar de galería</string>
+    <string name="picture_cancel">Cancelar</string>
+    <string name="picture_chooser_title">Selecciona una imagen</string>
+
 </resources>

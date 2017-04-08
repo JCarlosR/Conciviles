@@ -1,6 +1,7 @@
 package com.programacionymas.conciviles.io;
 
 import com.programacionymas.conciviles.io.response.LoginResponse;
+import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.io.response.ProfileResponse;
 import com.programacionymas.conciviles.model.Area;
 import com.programacionymas.conciviles.model.CriticalRisk;
@@ -13,7 +14,9 @@ import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Query;
 
 public interface MyApiService {
@@ -44,5 +47,50 @@ public interface MyApiService {
 
     @GET("critical-risks")
     Call<ArrayList<CriticalRisk>> getCriticalRisks();
+
+
+    // Register report
+    // 2 methods are required because when there are no images attached
+    // an error is thrown, @Multipart requires at least one @Part used
+
+    @POST("reports")
+    Call<NewReportResponse> postNewReport(@Query("user_id") int user_id,
+                                          @Query("description") String description,
+                                          @Query("work_front") int work_front_id,
+                                          @Query("area") int area_id,
+                                          @Query("responsible") int responsible_user_id,
+                                          @Query("planned_date") String planned_date,
+                                          @Query("deadline") String deadline,
+                                          @Query("state") String state,
+                                          @Query("actions") String actions,
+                                          @Query("aspect") String aspect,
+                                          @Query("potential") String potential,
+                                          @Query("inspections") String inspections,
+                                          @Query("critical_risk") int critical_risk_id,
+                                          @Query("observations") String observations,
+                                          @Query("inform_id") int inform_id
+    );
+
+    @Multipart
+    @POST("reports")
+    Call<NewReportResponse> postNewReportWithImages(@Query("user_id") int user_id,
+                                          @Query("description") String description,
+                                          @Part("image") String imageBase64,
+                                          @Query("work_front") int work_front_id,
+                                          @Query("area") int area_id,
+                                          @Query("responsible") int responsible_user_id,
+                                          @Query("planned_date") String planned_date,
+                                          @Query("deadline") String deadline,
+                                          @Query("state") String state,
+                                          @Query("actions") String actions,
+                                          @Part("image_action") String imageActionBase64,
+                                          @Query("aspect") String aspect,
+                                          @Query("potential") String potential,
+                                          @Query("inspections") String inspections,
+                                          @Query("critical_risk") int critical_risk_id,
+                                          @Query("observations") String observations,
+                                          @Query("inform_id") int inform_id
+    );
+
 
 }

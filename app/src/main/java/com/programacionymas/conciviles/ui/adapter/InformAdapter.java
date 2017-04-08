@@ -74,6 +74,7 @@ public class InformAdapter extends RecyclerView.Adapter<InformAdapter.ViewHolder
             public void onClick(View view) {
                 Intent intent = new Intent(context, ReportsActivity.class);
                 intent.putExtra("inform_id", currentInform.getId());
+                intent.putExtra("inform_editable", currentInform.isEditable());
                 context.startActivity(intent);
             }
         });
