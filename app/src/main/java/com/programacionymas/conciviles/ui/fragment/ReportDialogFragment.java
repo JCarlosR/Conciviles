@@ -7,11 +7,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,7 +22,6 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
@@ -43,15 +40,22 @@ import retrofit2.Response;
 
 public class ReportDialogFragment extends DialogFragment implements View.OnClickListener {
 
-    private EditText etDescription;
+    private EditText etDescription, etActions, etInspections, etObservations;
     private EditText etPlannedDate, etDeadline;
 
-    private TextInputLayout tilDescription;
+    private TextInputLayout tilDescription, tilActions, tilInspections, tilObservations;
 
     private ImageButton btnTakeImage, btnTakeImageAction;
     private Spinner spinnerWorkFront, spinnerArea, spinnerResponsible, spinnerCriticalRisk;
 
+    // Selected report to edit (or empty for new reports)
     private String report_id;
+
+    // Spinner options
+    private ArrayList<WorkFront> workFronts;
+    private ArrayList<Area> areas;
+    private ArrayList<User> responsibles;
+    private ArrayList<CriticalRisk> criticalRisks;
 
     public static ReportDialogFragment newInstance(String report_id) {
         ReportDialogFragment f = new ReportDialogFragment();
@@ -96,10 +100,14 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         }
         setHasOptionsMenu(true);
 
-        // TextInputLayout tilPlannedDate = (TextInputLayout) view.findViewById(R.id.tilPlannedDate);
         tilDescription = (TextInputLayout) view.findViewById(R.id.tilDescription);
+        tilInspections = (TextInputLayout) view.findViewById(R.id.tilInspections);
+        // tilObservations = (TextInputLayout) view.findViewById(R.id.tilObservations);
 
         etDescription = (EditText) view.findViewById(R.id.etDescription);
+        etActions = (EditText) view.findViewById(R.id.etActions);
+        etInspections = (EditText) view.findViewById(R.id.etInspections);
+        etObservations = (EditText) view.findViewById(R.id.etObservations);
 
         // date fields references
         etPlannedDate = (EditText) view.findViewById(R.id.etPlannedDate);
@@ -132,7 +140,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             @Override
             public void onResponse(Call<ArrayList<WorkFront>> call, Response<ArrayList<WorkFront>> response) {
                 if (response.isSuccessful()) {
-                    populateWorkFrontSpinner(response.body());
+                    workFronts = response.body();
+                    populateWorkFrontSpinner(workFronts);
                 }
             }
 
@@ -147,7 +156,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             @Override
             public void onResponse(Call<ArrayList<Area>> call, Response<ArrayList<Area>> response) {
                 if (response.isSuccessful()) {
-                    populateAreaSpinner(response.body());
+                    areas = response.body();
+                    populateAreaSpinner(areas);
                 }
             }
 
@@ -163,7 +173,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             @Override
             public void onResponse(Call<ArrayList<User>> call, Response<ArrayList<User>> response) {
                 if (response.isSuccessful()) {
-                    populateResponsibleSpinner(response.body());
+                    responsibles = response.body();
+                    populateResponsibleSpinner(responsibles);
                 }
             }
 
@@ -179,7 +190,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             @Override
             public void onResponse(Call<ArrayList<CriticalRisk>> call, Response<ArrayList<CriticalRisk>> response) {
                 if (response.isSuccessful()) {
-                    populateCriticalRiskSpinner(response.body());
+                    criticalRisks = response.body();
+                    populateCriticalRiskSpinner(criticalRisks);
                 }
             }
 
@@ -227,7 +239,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
     }
 
     private void populateSpinner(List<String> options, Spinner spinnerTarget) {
-        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, options);
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_dropdown_item, options);
         spinnerTarget.setAdapter(spinnerArrayAdapter);
     }
 
@@ -304,30 +316,46 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             return;
         }
 
+        if (! validateEditText(etInspections, tilInspections, R.string.error_inspections)) {
+            return;
+        }
+
         // get edit text values
 
         final String description = etDescription.getText().toString().trim();
-        // final String ubicacion = etUbicacion.getText().toString().trim();
+        final String actions = etActions.getText().toString().trim();
+        final String inspections = etInspections.getText().toString().trim();
+        final String observations = etObservations.getText().toString().trim();
 
         // get spinner values
 
-        // final String responsable = spinnerResponsible.getText().toString().trim();
+        final int workFrontIndex = Global.getSpinnerIndex(spinnerWorkFront);
+        final int workFront = workFronts.get(workFrontIndex).getId();
 
-        // If we have received an ID, we have to edit the data, else, we have to create a new record
-  /*      if (report_id.isEmpty()) {
-            final String inventariador = Global.getFromSharedPreferences(getActivity(), "username");
+        final int areaIndex = Global.getSpinnerIndex(spinnerArea);
+        final int area = areas.get(workFrontIndex).getId();
 
-            Call<SimpleResponse> call = RedemnorteApiAdapter.getApiService().postRegistrarHoja(
-                    id, local, ubicacion, responsable, cargo, oficina,
+        final int responsibleIndex = Global.getSpinnerIndex(spinnerResponsible);
+        final int responsible = responsibles.get(responsibleIndex).getId();
+
+        final int criticalRiskIndex = Global.getSpinnerIndex(spinnerCriticalRisk);
+        final int criticalRisk= criticalRisks.get(criticalRiskIndex).getId();
+
+        // If the report ID is empty, create a new record
+        if (report_id.isEmpty()) {
+            final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
+
+            /*Call<SimpleResponse> call = MyApiAdapter.getApiService().postStoreReport(
+                    local, ubicacion, responsable, cargo, oficina,
                     ambiente, area, activo, observacion, inventariador
             );
-            call.enqueue(new RegistrarHojaCallback());
-        } else {
-            Call<SimpleResponse> call = RedemnorteApiAdapter.getApiService().postEditarHoja(
+            // call.enqueue(new RegistrarHojaCallback());*/
+        } /*else { // edit the selected report
+            Call<SimpleResponse> call = MyApiAdapter.getApiService().postUpdateReport(
                     id, local, ubicacion, responsable, cargo, oficina,
                     ambiente, area, activo, observacion
             );
-            call.enqueue(new EditarHojaCallback());
+            // call.enqueue(new EditarHojaCallback());
         }*/
     }
 

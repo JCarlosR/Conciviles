@@ -9,8 +9,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 public class Global {
+
+    public static int getSpinnerIndex(Spinner spinner)
+    {
+        final String selectedOption = spinner.getSelectedItem().toString();
+        int index = 0;
+
+        for (int i=0;i<spinner.getCount();i++)
+            if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(selectedOption)){
+                index = i;
+                break;
+            }
+
+        return index;
+    }
 
     public static void showMessageDialog(Context context, String title, String message) {
         AlertDialog.Builder adb = new AlertDialog.Builder(context);

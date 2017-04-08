@@ -25,8 +25,18 @@
     <string name="report_inspections"># Inspecciones</string>
     <string name="report_observations">Observaciones</string>
 
+    <string name="report_work_front">Frente de trabajo</string>
+    <string name="report_area">Área</string>
+    <string name="report_responsible">Responsable</string>
+    <string name="report_state">Estado</string>
+    <string name="report_aspect">Aspecto</string>
+    <string name="report_potential">Potencial</string>
+    <string name="report_critical_risk">Riesgo crítico</string>
+
+
     <!-- Error messages -->
     <string name="error_description">Es necesario ingresar una descripción</string>
+    <string name="error_inspections">Es necesario ingresar un nro de inspecciones</string>
 
     <!-- Spinner options -->
 

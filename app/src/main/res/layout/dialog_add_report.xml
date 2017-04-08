@@ -65,16 +65,31 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <TextView
+                android:layout_marginTop="6dp"
+                android:text="@string/report_work_front"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
             <Spinner
                 android:id="@+id/spinnerWorkFront"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <TextView
+                android:layout_marginTop="6dp"
+                android:text="@string/report_area"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
             <Spinner
                 android:id="@+id/spinnerArea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <TextView
+                android:layout_marginTop="6dp"
+                android:text="@string/report_responsible"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
             <Spinner
                 android:id="@+id/spinnerResponsible"
                 android:layout_width="match_parent"
@@ -113,11 +128,19 @@
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
+            <TextView
+                android:layout_marginTop="6dp"
+                android:text="@string/report_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
             <Spinner
                 android:id="@+id/spinnerState"
                 android:entries="@array/state_options"
+                style="?android:attr/dropDownItemStyle"
+                android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="?android:attr/listPreferredItemHeight"
+                android:ellipsize="marquee" />
 
             <TextView
                 android:layout_marginTop="8dp"
@@ -152,17 +175,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <TextView
+                android:layout_marginTop="6dp"
+                android:text="@string/report_aspect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
             <Spinner
                 android:id="@+id/spinnerAspect"
                 android:entries="@array/aspect_options"
+                style="?android:attr/dropDownItemStyle"
+                android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/listPreferredItemHeight"
+                android:ellipsize="marquee" />
+
+            <TextView
+                android:layout_marginTop="6dp"
+                android:text="@string/report_potential"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-
             <Spinner
                 android:id="@+id/spinnerPotential"
                 android:entries="@array/potential_options"
+                style="?android:attr/dropDownItemStyle"
+                android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="?android:attr/listPreferredItemHeight"
+                android:ellipsize="marquee" />
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/tilInspections"
@@ -171,6 +210,7 @@
 
                 <EditText
                     android:id="@+id/etInspections"
+                    android:text="1"
                     android:hint="@string/report_inspections"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -178,6 +218,11 @@
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
+            <TextView
+                android:layout_marginTop="6dp"
+                android:text="@string/report_critical_risk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
             <Spinner
                 android:id="@+id/spinnerCriticalRisk"
                 android:layout_width="match_parent"
