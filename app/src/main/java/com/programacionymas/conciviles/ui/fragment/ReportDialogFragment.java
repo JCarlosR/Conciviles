@@ -26,10 +26,20 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
+import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.model.Area;
+import com.programacionymas.conciviles.model.CriticalRisk;
+import com.programacionymas.conciviles.model.User;
+import com.programacionymas.conciviles.model.WorkFront;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ReportDialogFragment extends DialogFragment implements View.OnClickListener {
 
@@ -39,7 +49,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
     private TextInputLayout tilDescription;
 
     private ImageButton btnTakeImage, btnTakeImageAction;
-    private Spinner spinnerWorkFront, spinnerArea, spinnerReponsible;
+    private Spinner spinnerWorkFront, spinnerArea, spinnerResponsible, spinnerCriticalRisk;
 
     private String report_id;
 
@@ -91,58 +101,136 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
 
         etDescription = (EditText) view.findViewById(R.id.etDescription);
 
+        // date fields references
         etPlannedDate = (EditText) view.findViewById(R.id.etPlannedDate);
         etPlannedDate.setOnClickListener(this);
-
         etDeadline = (EditText) view.findViewById(R.id.etDeadline);
         etDeadline.setOnClickListener(this);
 
+        // spinner references
+        spinnerWorkFront = (Spinner) view.findViewById(R.id.spinnerWorkFront);
+        spinnerArea = (Spinner) view.findViewById(R.id.spinnerArea);
+        spinnerResponsible = (Spinner) view.findViewById(R.id.spinnerResponsible);
+        spinnerCriticalRisk = (Spinner) view.findViewById(R.id.spinnerCriticalRisk);
+
+        // load spinner data
         fetchSpinnerDataFromServer();
+
+        // buttons to capture photos or pick images from gallery
+        btnTakeImage = (ImageButton) view.findViewById(R.id.btnTakeImage);
+        btnTakeImageAction = (ImageButton) view.findViewById(R.id.btnTakeImageAction);
 
         return view;
     }
 
     private void fetchSpinnerDataFromServer() {
+        final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
 
-    }
-
-    /*private void poblarSpinner(ArrayList<Responsable> responsables) {
-        List<String> list = new ArrayList<String>();
-        for (Responsable r : responsables) {
-            list.add(r.getNombre());
-        }
-
-        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, list);
-        // spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerResponsible.setAdapter(spinnerArrayAdapter);
-    }*/
-
-    /*
-        private void obtenerDatosResponsables() {
-            Call<ResponsableResponse> call = RedemnorteApiAdapter.getApiService().getResponsables();
-            call.enqueue(new ResponsablesCallback());
-        }
-
-        class ResponsablesCallback implements Callback<ResponsableResponse> {
-
+        Call<ArrayList<WorkFront>> callWorkFronts = MyApiAdapter.getApiService()
+                .getWorkFrontsByLocationOfUser(user_id);
+        callWorkFronts.enqueue(new Callback<ArrayList<WorkFront>>() {
             @Override
-            public void onResponse(Call<ResponsableResponse> call, Response<ResponsableResponse> response) {
+            public void onResponse(Call<ArrayList<WorkFront>> call, Response<ArrayList<WorkFront>> response) {
                 if (response.isSuccessful()) {
-                    ResponsableResponse responsableResponse = response.body();
-                    if (! responsableResponse.isError()) {
-                        poblarSpinnerResponsables(responsableResponse.getResponsables());
-                    }
-                } else {
-                    Toast.makeText(getContext(), "Error en el formato de respuesta", Toast.LENGTH_SHORT).show();
+                    populateWorkFrontSpinner(response.body());
                 }
             }
 
             @Override
-            public void onFailure(Call<ResponsableResponse> call, Throwable t) {
-                Toast.makeText(getContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<ArrayList<WorkFront>> call, Throwable t) {
+
             }
+        });
+
+        Call<ArrayList<Area>> callAreas = MyApiAdapter.getApiService().getAreas();
+        callAreas.enqueue(new Callback<ArrayList<Area>>() {
+            @Override
+            public void onResponse(Call<ArrayList<Area>> call, Response<ArrayList<Area>> response) {
+                if (response.isSuccessful()) {
+                    populateAreaSpinner(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ArrayList<Area>> call, Throwable t) {
+
+            }
+        });
+
+        Call<ArrayList<User>> callUsers = MyApiAdapter.getApiService()
+                .getUsersByLocationOfUser(user_id);
+        callUsers.enqueue(new Callback<ArrayList<User>>() {
+            @Override
+            public void onResponse(Call<ArrayList<User>> call, Response<ArrayList<User>> response) {
+                if (response.isSuccessful()) {
+                    populateResponsibleSpinner(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ArrayList<User>> call, Throwable t) {
+
+            }
+        });
+
+        Call<ArrayList<CriticalRisk>> callCriticalRisks = MyApiAdapter.getApiService()
+                .getCriticalRisks();
+        callCriticalRisks.enqueue(new Callback<ArrayList<CriticalRisk>>() {
+            @Override
+            public void onResponse(Call<ArrayList<CriticalRisk>> call, Response<ArrayList<CriticalRisk>> response) {
+                if (response.isSuccessful()) {
+                    populateCriticalRiskSpinner(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ArrayList<CriticalRisk>> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void populateWorkFrontSpinner(ArrayList<WorkFront> workFronts) {
+        List<String> options = new ArrayList<String>();
+        for (WorkFront workFront : workFronts) {
+            options.add(workFront.getName());
         }
-    */
+
+        populateSpinner(options, spinnerWorkFront);
+    }
+
+    private void populateAreaSpinner(ArrayList<Area> areas) {
+        List<String> options = new ArrayList<String>();
+        for (Area area : areas) {
+            options.add(area.getName());
+        }
+
+        populateSpinner(options, spinnerArea);
+    }
+
+    private void populateResponsibleSpinner(ArrayList<User> users) {
+        List<String> options = new ArrayList<String>();
+        for (User user : users) {
+            options.add(user.getName());
+        }
+
+        populateSpinner(options, spinnerResponsible);
+    }
+
+    private void populateCriticalRiskSpinner(ArrayList<CriticalRisk> criticalRisks) {
+        List<String> options = new ArrayList<String>();
+        for (CriticalRisk criticalRisk : criticalRisks) {
+            options.add(criticalRisk.getName());
+        }
+
+        populateSpinner(options, spinnerCriticalRisk);
+    }
+
+    private void populateSpinner(List<String> options, Spinner spinnerTarget) {
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, options);
+        spinnerTarget.setAdapter(spinnerArrayAdapter);
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -242,109 +330,5 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             call.enqueue(new EditarHojaCallback());
         }*/
     }
-/*
-    class RegistrarHojaCallback implements Callback<SimpleResponse> {
 
-        @Override
-        public void onResponse(Call<SimpleResponse> call, Response<SimpleResponse> response) {
-            if (response.isSuccessful()) {
-                SimpleResponse simpleResponse = response.body();
-                if (simpleResponse.isError()) {
-                    // Log.d("HeaderDialog", "messageError => " + simpleResponse.getMessage());
-                    Toast.makeText(getContext(), simpleResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    Toast.makeText(getContext(), "Se ha registrado una nueva hoja", Toast.LENGTH_SHORT).show();
-
-                    // Re-load the sheets
-                    ((PanelActivity) getActivity()).cargarHojas();
-                    dismiss();
-                }
-            } else {
-                Toast.makeText(getContext(), "Error en el formato de respuesta", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        public void onFailure(Call<SimpleResponse> call, Throwable t) {
-            Toast.makeText(getContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    class EditarHojaCallback implements Callback<SimpleResponse> {
-
-        @Override
-        public void onResponse(Call<SimpleResponse> call, Response<SimpleResponse> response) {
-            if (response.isSuccessful()) {
-                SimpleResponse simpleResponse = response.body();
-                if (simpleResponse.isError()) {
-                    Toast.makeText(getContext(), simpleResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    Toast.makeText(getContext(), "Se ha editado correctamente la hoja", Toast.LENGTH_SHORT).show();
-
-                    // Re-load the sheets
-                    ((PanelActivity) getActivity()).cargarHojas();
-                    dismiss();
-                }
-            } else {
-                Toast.makeText(getContext(), "Error en el formato de respuesta", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        public void onFailure(Call<SimpleResponse> call, Throwable t) {
-            Toast.makeText(getContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void fetchHeaderDataFromServer() {
-        Call<HojaResponse> call = RedemnorteApiAdapter.getApiService().getHoja(report_id);
-        call.enqueue(new ShowHeaderDataCallback());
-    }
-
-    class ShowHeaderDataCallback implements Callback<HojaResponse> {
-
-        @Override
-        public void onResponse(Call<HojaResponse> call, Response<HojaResponse> response) {
-            if (response.isSuccessful()) {
-                HojaResponse hojaResponse = response.body();
-                if (hojaResponse.isError()) {
-                    Toast.makeText(getContext(), hojaResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    showHeaderDataInFields(hojaResponse.getHoja());
-                }
-            } else {
-                Toast.makeText(getContext(), "Error en el formato de respuesta", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        public void onFailure(Call<HojaResponse> call, Throwable t) {
-            Toast.makeText(getContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-        }
-
-        private void showHeaderDataInFields(Hoja hoja) {
-            etLocal.setText(hoja.getLocal());
-            etUbicacion.setText(hoja.getUbicacion());
-            etCargo.setText(hoja.getCargo());
-            etOficina.setText(hoja.getOficina());
-            etAmbiente.setText(hoja.getAmbiente());
-            etArea.setText(hoja.getArea());
-
-            spinnerResponsible.setText(hoja.getResponsable());
-
-            if ( hoja.getActivo().equals("0") ) {
-                // active==0 => pendiente
-                checkPendiente.setChecked(true);
-                // pendiente => show observation field
-                tilObservation.setVisibility(View.VISIBLE);
-                etObservation.setText(hoja.getObservacion());
-            }
-
-            setCheckPendienteOnChangeListener();
-        }
-    }
-*/
 }

@@ -2,8 +2,12 @@ package com.programacionymas.conciviles.io;
 
 import com.programacionymas.conciviles.io.response.LoginResponse;
 import com.programacionymas.conciviles.io.response.ProfileResponse;
+import com.programacionymas.conciviles.model.Area;
+import com.programacionymas.conciviles.model.CriticalRisk;
 import com.programacionymas.conciviles.model.Inform;
 import com.programacionymas.conciviles.model.Report;
+import com.programacionymas.conciviles.model.User;
+import com.programacionymas.conciviles.model.WorkFront;
 
 import java.util.ArrayList;
 
@@ -25,4 +29,20 @@ public interface MyApiService {
 
     @GET("reports")
     Call<ArrayList<Report>> getReportsByInform(@Query("inform_id") int inform_id);
+
+
+    // Spinner options:
+
+    @GET("work-fronts")
+    Call<ArrayList<WorkFront>> getWorkFrontsByLocationOfUser(@Query("user_id") int user_id);
+
+    @GET("areas")
+    Call<ArrayList<Area>> getAreas();
+
+    @GET("responsible-users")
+    Call<ArrayList<User>> getUsersByLocationOfUser(@Query("user_id") int user_id);
+
+    @GET("critical-risks")
+    Call<ArrayList<CriticalRisk>> getCriticalRisks();
+
 }
