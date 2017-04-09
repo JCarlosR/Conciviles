@@ -17,6 +17,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface MyApiService {
@@ -32,6 +33,9 @@ public interface MyApiService {
 
     @GET("reports")
     Call<ArrayList<Report>> getReportsByInform(@Query("inform_id") int inform_id);
+
+    @GET("reports/{id}")
+    Call<Report> getReportById(@Path("id") int report_id);
 
 
     // Spinner options:
@@ -93,4 +97,42 @@ public interface MyApiService {
     );
 
 
+    // Edit report
+
+    @POST("reports/{id}")
+    Call<NewReportResponse> updateNewReport(@Path("id") int report_id,
+                                          @Query("description") String description,
+                                          @Query("work_front") int work_front_id,
+                                          @Query("area") int area_id,
+                                          @Query("responsible") int responsible_user_id,
+                                          @Query("planned_date") String planned_date,
+                                          @Query("deadline") String deadline,
+                                          @Query("state") String state,
+                                          @Query("actions") String actions,
+                                          @Query("aspect") String aspect,
+                                          @Query("potential") String potential,
+                                          @Query("inspections") String inspections,
+                                          @Query("critical_risk") int critical_risk_id,
+                                          @Query("observations") String observations
+    );
+
+    @Multipart
+    @POST("reports/{id}")
+    Call<NewReportResponse> updateNewReportWithImages(@Path("id") int report_id,
+                                                    @Query("description") String description,
+                                                    @Part("image") String imageBase64,
+                                                    @Query("work_front") int work_front_id,
+                                                    @Query("area") int area_id,
+                                                    @Query("responsible") int responsible_user_id,
+                                                    @Query("planned_date") String planned_date,
+                                                    @Query("deadline") String deadline,
+                                                    @Query("state") String state,
+                                                    @Query("actions") String actions,
+                                                    @Part("image_action") String imageActionBase64,
+                                                    @Query("aspect") String aspect,
+                                                    @Query("potential") String potential,
+                                                    @Query("inspections") String inspections,
+                                                    @Query("critical_risk") int critical_risk_id,
+                                                    @Query("observations") String observations
+    );
 }

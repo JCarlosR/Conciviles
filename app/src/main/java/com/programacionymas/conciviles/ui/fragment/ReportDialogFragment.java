@@ -44,8 +44,11 @@ import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.model.Area;
 import com.programacionymas.conciviles.model.CriticalRisk;
+import com.programacionymas.conciviles.model.Report;
 import com.programacionymas.conciviles.model.User;
 import com.programacionymas.conciviles.model.WorkFront;
+import com.programacionymas.conciviles.ui.activity.ReportsActivity;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -128,7 +131,6 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             title = "Nuevo reporte";
         else {
             title = "Editar reporte";
-            // fetchReportDataFromServer();
         }
 
         Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
@@ -171,6 +173,9 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
 
         // load spinner data
         fetchSpinnerDataFromServer();
+        // load report data
+        if (report_id > 0)
+            fetchReportDataFromServer(report_id);
 
         // buttons to capture photos or pick images from gallery
         btnTakeImage = (ImageButton) view.findViewById(R.id.btnTakeImage);
@@ -183,6 +188,41 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         ivImageAction = (ImageView) view.findViewById(R.id.ivImageAction);
 
         return view;
+    }
+
+    private void fetchReportDataFromServer(final int report_id) {
+        Call<Report> call = MyApiAdapter.getApiService().getReportById(report_id);
+        call.enqueue(new Callback<Report>() {
+            @Override
+            public void onResponse(Call<Report> call, Response<Report> response) {
+                if (response.isSuccessful()) {
+                    Report report = response.body();
+
+                    Global.setSpinnerSelectedOption(spinnerWorkFront, report.getWorkFrontName());
+                    Global.setSpinnerSelectedOption(spinnerArea, report.getAreaName());
+                    Global.setSpinnerSelectedOption(spinnerResponsible, report.getResponsibleName());
+                    Global.setSpinnerSelectedOption(spinnerAspect, report.getAspect());
+                    Global.setSpinnerSelectedOption(spinnerCriticalRisk, report.getCriticalRisksName());
+                    Global.setSpinnerSelectedOption(spinnerPotential, report.getPotential());
+                    Global.setSpinnerSelectedOption(spinnerState, report.getState());
+
+                    Picasso.with(getActivity()).load(report.getImage()).into(ivImage);
+                    Picasso.with(getActivity()).load(report.getImageAction()).into(ivImageAction);
+
+                    etPlannedDate.setText(report.getPlannedDate());
+                    etDeadline.setText(report.getDeadline());
+                    etInspections.setText(String.valueOf(report.getInspections()));
+                    etDescription.setText(report.getDescription());
+                    etActions.setText(report.getActions());
+                    etObservations.setText(report.getObservations());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Report> call, Throwable t) {
+
+            }
+        });
     }
 
     private void fetchSpinnerDataFromServer() {
@@ -399,26 +439,28 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
 
         // get spinner values
 
-        final int workFrontIndex = Global.getSpinnerIndex(spinnerWorkFront);
+        final int workFrontIndex = Global.getSpinnerSelectedIndex(spinnerWorkFront);
         final int workFront = workFronts.get(workFrontIndex).getId();
 
-        final int areaIndex = Global.getSpinnerIndex(spinnerArea);
+        final int areaIndex = Global.getSpinnerSelectedIndex(spinnerArea);
         final int area = areas.get(areaIndex).getId();
 
-        final int responsibleIndex = Global.getSpinnerIndex(spinnerResponsible);
+        final int responsibleIndex = Global.getSpinnerSelectedIndex(spinnerResponsible);
         final int responsible = responsibleUsers.get(responsibleIndex).getId();
 
-        final int criticalRiskIndex = Global.getSpinnerIndex(spinnerCriticalRisk);
+        final int criticalRiskIndex = Global.getSpinnerSelectedIndex(spinnerCriticalRisk);
         final int criticalRisk= criticalRisks.get(criticalRiskIndex).getId();
 
         final String state = spinnerState.getSelectedItem().toString();
         final String aspect = spinnerAspect.getSelectedItem().toString();
         final String potential = spinnerPotential.getSelectedItem().toString();
 
+        final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
+
         // If the report ID is ZERO, create a new record
         if (report_id == 0) {
-            Log.d("ReportDialogFragment", "Going to post a new report");
-            final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
+            // Log.d("ReportDialogFragment", "Going to post a new report");
+
 
             Call<NewReportResponse> call;
 
@@ -448,6 +490,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                         if (newReportResponse.isSuccess()) {
                             Toast.makeText(getActivity(), "El reporte se ha registrado satisfactoriamente.", Toast.LENGTH_SHORT).show();
                             dismiss();
+                            ((ReportsActivity) getActivity()).reloadReportsByInform();
                         } else {
                             Toast.makeText(getActivity(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
                         }
@@ -459,13 +502,48 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                     Log.d("ReportDialogFragment", "onFailure => " + t.getLocalizedMessage());
                 }
             });
-        } /*else { // edit the selected report
-            Call<SimpleResponse> call = MyApiAdapter.getApiService().postUpdateReport(
-                    id, local, ubicacion, responsable, cargo, oficina,
-                    ambiente, area, activo, observacion
-            );
-            // call.enqueue();
-        }*/
+        } else { // edit the selected report
+            Call<NewReportResponse> call;
+
+            if ((image == null || image.isEmpty()) && (imageAction == null || imageAction.isEmpty())) {
+                call = MyApiAdapter.getApiService().updateNewReport(
+                        report_id, description, workFront, area, responsible,
+                        planned_date, deadline,
+                        state, actions, aspect, potential, inspections,
+                        criticalRisk, observations
+                );
+
+            } else {
+                call = MyApiAdapter.getApiService().updateNewReportWithImages(
+                        report_id, description, image, workFront, area, responsible,
+                        planned_date, deadline,
+                        state, actions, imageAction, aspect, potential, inspections,
+                        criticalRisk, observations
+                );
+
+            }
+
+            call.enqueue(new Callback<NewReportResponse>() {
+                @Override
+                public void onResponse(Call<NewReportResponse> call, Response<NewReportResponse> response) {
+                    if (response.isSuccessful()) {
+                        NewReportResponse newReportResponse = response.body();
+                        if (newReportResponse.isSuccess()) {
+                            Toast.makeText(getActivity(), "El reporte se ha modificado correctamente.", Toast.LENGTH_SHORT).show();
+                            dismiss();
+                            ((ReportsActivity) getActivity()).reloadReportsByInform();
+                        } else {
+                            Toast.makeText(getActivity(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<NewReportResponse> call, Throwable t) {
+                    Log.d("ReportDialogFragment", "onFailure => " + t.getLocalizedMessage());
+                }
+            });
+        }
     }
 
     private void takeImage() {

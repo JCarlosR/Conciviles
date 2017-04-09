@@ -25,12 +25,21 @@ public class Global {
         return Base64.encodeToString(byteFormat, Base64.NO_WRAP);
     }
 
-    public static int getSpinnerIndex(Spinner spinner)
+    public static void setSpinnerSelectedOption(Spinner spinner, String option)
+    {
+        for (int i=0; i<spinner.getCount(); i++)
+            if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(option)){
+                spinner.setSelection(i);
+                break;
+            }
+    }
+
+    public static int getSpinnerSelectedIndex(Spinner spinner)
     {
         final String selectedOption = spinner.getSelectedItem().toString();
         int index = 0;
 
-        for (int i=0;i<spinner.getCount();i++)
+        for (int i=0; i<spinner.getCount(); i++)
             if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(selectedOption)){
                 index = i;
                 break;

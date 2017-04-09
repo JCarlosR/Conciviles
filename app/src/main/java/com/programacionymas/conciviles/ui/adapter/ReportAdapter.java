@@ -2,6 +2,9 @@ package com.programacionymas.conciviles.ui.adapter;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +18,7 @@ import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
 import com.programacionymas.conciviles.ui.activity.ReportActivity;
+import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -22,6 +26,8 @@ import java.util.ArrayList;
 public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder> {
 
     private Activity activity;
+    private int inform_id;
+
     private ArrayList<Report> reports;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -54,9 +60,10 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         }
     }
 
-    public ReportAdapter(Activity activity) {
+    public ReportAdapter(Activity activity, final int inform_id) {
         this.activity = activity;
         this.reports = new ArrayList<>();
+        this.inform_id = inform_id;
     }
 
     public void setReportsData(ArrayList<Report> reports) {
@@ -105,7 +112,17 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         holder.btnEditReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (authenticated_user_id != currentReport.getUserId()) {
+                if (authenticated_user_id == currentReport.getUserId()) {
+                    FragmentManager fragmentManager = ((AppCompatActivity) activity).getSupportFragmentManager();
+
+                    // Empty report_id => Register new report
+                    ReportDialogFragment newFragment = ReportDialogFragment.newInstance(inform_id, currentReport.getId());
+
+                    FragmentTransaction transaction = fragmentManager.beginTransaction();
+                    transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                    transaction.add(android.R.id.content, newFragment)
+                            .addToBackStack(null).commit();
+                } else {
                     Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú mismo has creado.");
                 }
             }

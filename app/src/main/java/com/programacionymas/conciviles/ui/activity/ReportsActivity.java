@@ -30,7 +30,7 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     private RecyclerView recyclerView;
     private ReportAdapter adapter;
 
-    private int inform_id;
+    private static int inform_id;
     private boolean inform_editable;
 
     @Override
@@ -44,8 +44,7 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         setupRecyclerView();
 
         if (inform_id > 0) {
-            Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform_id);
-            call.enqueue(this);
+            reloadReportsByInform();
         }
 
         final String title = "Informe " + inform_id;
@@ -58,6 +57,11 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    public void reloadReportsByInform() {
+        Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform_id);
+        call.enqueue(this);
     }
 
     @Override
@@ -84,7 +88,7 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        adapter = new ReportAdapter(this);
+        adapter = new ReportAdapter(this, inform_id);
         recyclerView.setAdapter(adapter);
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
