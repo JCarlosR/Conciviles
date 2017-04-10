@@ -1,24 +1,16 @@
 package com.programacionymas.conciviles.ui.activity;
 
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.widget.NestedScrollView;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.programacionymas.conciviles.R;
-import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.model.Report;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
-
-import retrofit2.Call;
 
 public class ReportActivity extends AppCompatActivity {
 
@@ -67,20 +59,6 @@ public class ReportActivity extends AppCompatActivity {
 
         ivImage = (ImageView) findViewById(R.id.ivImage);
         ivImageAction = (ImageView) findViewById(R.id.ivImageAction);
-
-        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-
-        NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nestedScrollView);
-        nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                if (scrollY > oldScrollY) {
-                    fab.hide();
-                } else {
-                    fab.show();
-                }
-            }
-        });
    }
 
     private void getReportDataFromExtras() {

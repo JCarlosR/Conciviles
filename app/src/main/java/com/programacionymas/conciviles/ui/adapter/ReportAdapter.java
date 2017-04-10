@@ -113,15 +113,13 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             @Override
             public void onClick(View view) {
                 if (authenticated_user_id == currentReport.getUserId()) {
-                    FragmentManager fragmentManager = ((AppCompatActivity) activity).getSupportFragmentManager();
 
                     // Empty report_id => Register new report
-                    ReportDialogFragment newFragment = ReportDialogFragment.newInstance(inform_id, currentReport.getId());
+                    Intent intent = new Intent(activity, ReportDialogFragment.class);
+                    intent.putExtra("inform_id", inform_id);
+                    intent.putExtra("report_id", currentReport.getId());
+                    activity.startActivity(intent);
 
-                    FragmentTransaction transaction = fragmentManager.beginTransaction();
-                    transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                    transaction.add(android.R.id.content, newFragment)
-                            .addToBackStack(null).commit();
                 } else {
                     Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú mismo has creado.");
                 }

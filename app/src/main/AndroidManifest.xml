@@ -28,6 +28,9 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:name=".ui.activity.ReportsActivity" />
         <activity android:name=".ui.activity.ReportActivity" />
+        <activity
+            android:theme="@style/AppTheme.NoActionBar"
+            android:name=".ui.fragment.ReportDialogFragment" />
     </application>
 
 </manifest>

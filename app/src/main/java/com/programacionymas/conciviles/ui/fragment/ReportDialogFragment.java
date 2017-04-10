@@ -2,7 +2,6 @@ package com.programacionymas.conciviles.ui.fragment;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -16,20 +15,15 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.content.CursorLoader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -38,6 +32,8 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
@@ -47,7 +43,6 @@ import com.programacionymas.conciviles.model.CriticalRisk;
 import com.programacionymas.conciviles.model.Report;
 import com.programacionymas.conciviles.model.User;
 import com.programacionymas.conciviles.model.WorkFront;
-import com.programacionymas.conciviles.ui.activity.ReportsActivity;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -57,9 +52,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static android.app.Activity.RESULT_OK;
-
-public class ReportDialogFragment extends DialogFragment implements View.OnClickListener {
+public class ReportDialogFragment extends AppCompatActivity implements View.OnClickListener {
 
     private EditText etDescription, etActions, etInspections, etObservations;
     private EditText etPlannedDate, etDeadline;
@@ -100,31 +93,14 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
     // Images stored as base64
     private String image, imageAction;
 
-    public static ReportDialogFragment newInstance(int inform_id, int report_id) {
-        ReportDialogFragment f = new ReportDialogFragment();
-
-        Bundle args = new Bundle();
-        args.putInt("inform_id", inform_id);
-        args.putInt("report_id", report_id);
-        f.setArguments(args);
-
-        return f;
-    }
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.dialog_add_report);
 
-        inform_id = getArguments().getInt("inform_id");
-        report_id = getArguments().getInt("report_id");
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.dialog_add_report, container, false);
-
-        // etId = (EditText) view.findViewById(R.id.etId);
+        Intent intent = getIntent();
+        inform_id = intent.getIntExtra("inform_id", 0);
+        report_id = intent.getIntExtra("report_id", 0);
 
         String title;
         if (report_id == 0)
@@ -133,61 +109,65 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             title = "Editar reporte";
         }
 
-        Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(title);
-        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        setSupportActionBar(toolbar);
 
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeButtonEnabled(true);
             actionBar.setHomeAsUpIndicator(android.R.drawable.ic_menu_close_clear_cancel);
         }
-        setHasOptionsMenu(true);
 
-        tilDescription = (TextInputLayout) view.findViewById(R.id.tilDescription);
-        tilInspections = (TextInputLayout) view.findViewById(R.id.tilInspections);
-        // tilObservations = (TextInputLayout) view.findViewById(R.id.tilObservations);
+        // setHasOptionsMenu(true);
+        getViewReferences();
+    }
 
-        etDescription = (EditText) view.findViewById(R.id.etDescription);
-        etActions = (EditText) view.findViewById(R.id.etActions);
-        etInspections = (EditText) view.findViewById(R.id.etInspections);
-        etObservations = (EditText) view.findViewById(R.id.etObservations);
+    private void getViewReferences() {
+
+        tilDescription = (TextInputLayout) findViewById(R.id.tilDescription);
+        tilInspections = (TextInputLayout) findViewById(R.id.tilInspections);
+        // tilObservations = (TextInputLayout) findViewById(R.id.tilObservations);
+
+        etDescription = (EditText) findViewById(R.id.etDescription);
+        etActions = (EditText) findViewById(R.id.etActions);
+        etInspections = (EditText) findViewById(R.id.etInspections);
+        etObservations = (EditText) findViewById(R.id.etObservations);
 
         // date fields references
-        etPlannedDate = (EditText) view.findViewById(R.id.etPlannedDate);
+        etPlannedDate = (EditText) findViewById(R.id.etPlannedDate);
         etPlannedDate.setOnClickListener(this);
-        etDeadline = (EditText) view.findViewById(R.id.etDeadline);
+        etDeadline = (EditText) findViewById(R.id.etDeadline);
         etDeadline.setOnClickListener(this);
 
         // spinner references
-        spinnerWorkFront = (Spinner) view.findViewById(R.id.spinnerWorkFront);
-        spinnerArea = (Spinner) view.findViewById(R.id.spinnerArea);
-        spinnerResponsible = (Spinner) view.findViewById(R.id.spinnerResponsible);
-        spinnerCriticalRisk = (Spinner) view.findViewById(R.id.spinnerCriticalRisk);
+        spinnerWorkFront = (Spinner) findViewById(R.id.spinnerWorkFront);
+        spinnerArea = (Spinner) findViewById(R.id.spinnerArea);
+        spinnerResponsible = (Spinner) findViewById(R.id.spinnerResponsible);
+        spinnerCriticalRisk = (Spinner) findViewById(R.id.spinnerCriticalRisk);
 
         // spinner with predefined options
-        spinnerState = (Spinner) view.findViewById(R.id.spinnerState);
-        spinnerAspect = (Spinner) view.findViewById(R.id.spinnerAspect);
-        spinnerPotential = (Spinner) view.findViewById(R.id.spinnerPotential);
+        spinnerState = (Spinner) findViewById(R.id.spinnerState);
+        spinnerAspect = (Spinner) findViewById(R.id.spinnerAspect);
+        spinnerPotential = (Spinner) findViewById(R.id.spinnerPotential);
 
         // load spinner data
-        fetchSpinnerDataFromServer();
+        fetchSpinnerDataFromPreferences();
+
         // load report data
         if (report_id > 0)
             fetchReportDataFromServer(report_id);
 
         // buttons to capture photos or pick images from gallery
-        btnTakeImage = (ImageButton) view.findViewById(R.id.btnTakeImage);
+        btnTakeImage = (ImageButton) findViewById(R.id.btnTakeImage);
         btnTakeImage.setOnClickListener(this);
-        btnTakeImageAction = (ImageButton) view.findViewById(R.id.btnTakeImageAction);
+        btnTakeImageAction = (ImageButton) findViewById(R.id.btnTakeImageAction);
         btnTakeImageAction.setOnClickListener(this);
 
-        // image view references
-        ivImage = (ImageView) view.findViewById(R.id.ivImage);
-        ivImageAction = (ImageView) view.findViewById(R.id.ivImageAction);
-
-        return view;
+        // image references
+        ivImage = (ImageView) findViewById(R.id.ivImage);
+        ivImageAction = (ImageView) findViewById(R.id.ivImageAction);
     }
 
     private void fetchReportDataFromServer(final int report_id) {
@@ -206,8 +186,8 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                     Global.setSpinnerSelectedOption(spinnerPotential, report.getPotential());
                     Global.setSpinnerSelectedOption(spinnerState, report.getState());
 
-                    Picasso.with(getActivity()).load(report.getImage()).into(ivImage);
-                    Picasso.with(getActivity()).load(report.getImageAction()).into(ivImageAction);
+                    Picasso.with(getApplicationContext()).load(report.getImage()).into(ivImage);
+                    Picasso.with(getApplicationContext()).load(report.getImageAction()).into(ivImageAction);
 
                     etPlannedDate.setText(report.getPlannedDate());
                     etDeadline.setText(report.getDeadline());
@@ -225,78 +205,26 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         });
     }
 
-    private void fetchSpinnerDataFromServer() {
-        final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
+    @SuppressWarnings("unchecked")
+    private void fetchSpinnerDataFromPreferences() {
+        final String workFrontsSerialized = Global.getStringFromPreferences(this, "work_fronts");
+        workFronts = new Gson().fromJson(workFrontsSerialized, new TypeToken<ArrayList<WorkFront>>(){}.getType());
+        populateWorkFrontSpinner();
 
-        Call<ArrayList<WorkFront>> callWorkFronts = MyApiAdapter.getApiService()
-                .getWorkFrontsByLocationOfUser(user_id);
-        callWorkFronts.enqueue(new Callback<ArrayList<WorkFront>>() {
-            @Override
-            public void onResponse(Call<ArrayList<WorkFront>> call, Response<ArrayList<WorkFront>> response) {
-                if (response.isSuccessful()) {
-                    workFronts = response.body();
-                    populateWorkFrontSpinner(workFronts);
-                }
-            }
+        final String areasSerialized = Global.getStringFromPreferences(this, "areas");
+        areas = new Gson().fromJson(areasSerialized, new TypeToken<ArrayList<Area>>(){}.getType());
+        populateAreaSpinner();
 
-            @Override
-            public void onFailure(Call<ArrayList<WorkFront>> call, Throwable t) {
+        final String responsibleUsersSerialized = Global.getStringFromPreferences(this, "responsible_users");
+        responsibleUsers = new Gson().fromJson(responsibleUsersSerialized, new TypeToken<ArrayList<User>>(){}.getType());
+        populateResponsibleSpinner();
 
-            }
-        });
-
-        Call<ArrayList<Area>> callAreas = MyApiAdapter.getApiService().getAreas();
-        callAreas.enqueue(new Callback<ArrayList<Area>>() {
-            @Override
-            public void onResponse(Call<ArrayList<Area>> call, Response<ArrayList<Area>> response) {
-                if (response.isSuccessful()) {
-                    areas = response.body();
-                    populateAreaSpinner(areas);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ArrayList<Area>> call, Throwable t) {
-
-            }
-        });
-
-        Call<ArrayList<User>> callUsers = MyApiAdapter.getApiService()
-                .getUsersByLocationOfUser(user_id);
-        callUsers.enqueue(new Callback<ArrayList<User>>() {
-            @Override
-            public void onResponse(Call<ArrayList<User>> call, Response<ArrayList<User>> response) {
-                if (response.isSuccessful()) {
-                    responsibleUsers = response.body();
-                    populateResponsibleSpinner(responsibleUsers);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ArrayList<User>> call, Throwable t) {
-
-            }
-        });
-
-        Call<ArrayList<CriticalRisk>> callCriticalRisks = MyApiAdapter.getApiService()
-                .getCriticalRisks();
-        callCriticalRisks.enqueue(new Callback<ArrayList<CriticalRisk>>() {
-            @Override
-            public void onResponse(Call<ArrayList<CriticalRisk>> call, Response<ArrayList<CriticalRisk>> response) {
-                if (response.isSuccessful()) {
-                    criticalRisks = response.body();
-                    populateCriticalRiskSpinner(criticalRisks);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ArrayList<CriticalRisk>> call, Throwable t) {
-
-            }
-        });
+        final String criticalRisksSerialized = Global.getStringFromPreferences(this, "critical_risks");
+        criticalRisks = new Gson().fromJson(criticalRisksSerialized, new TypeToken<ArrayList<CriticalRisk>>(){}.getType());
+        populateCriticalRiskSpinner();
     }
 
-    private void populateWorkFrontSpinner(ArrayList<WorkFront> workFronts) {
+    private void populateWorkFrontSpinner() {
         List<String> options = new ArrayList<String>();
         for (WorkFront workFront : workFronts) {
             options.add(workFront.getName());
@@ -305,7 +233,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         populateSpinner(options, spinnerWorkFront);
     }
 
-    private void populateAreaSpinner(ArrayList<Area> areas) {
+    private void populateAreaSpinner() {
         List<String> options = new ArrayList<String>();
         for (Area area : areas) {
             options.add(area.getName());
@@ -314,16 +242,16 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         populateSpinner(options, spinnerArea);
     }
 
-    private void populateResponsibleSpinner(ArrayList<User> users) {
+    private void populateResponsibleSpinner() {
         List<String> options = new ArrayList<String>();
-        for (User user : users) {
+        for (User user : responsibleUsers) {
             options.add(user.getName());
         }
 
         populateSpinner(options, spinnerResponsible);
     }
 
-    private void populateCriticalRiskSpinner(ArrayList<CriticalRisk> criticalRisks) {
+    private void populateCriticalRiskSpinner() {
         List<String> options = new ArrayList<String>();
         for (CriticalRisk criticalRisk : criticalRisks) {
             options.add(criticalRisk.getName());
@@ -333,21 +261,14 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
     }
 
     private void populateSpinner(List<String> options, Spinner spinnerTarget) {
-        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_dropdown_item, options);
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, options);
         spinnerTarget.setAdapter(spinnerArrayAdapter);
     }
 
-    @NonNull
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        return dialog;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.save_menu, menu);
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.save_menu, menu);
+        return true;
     }
 
     @Override
@@ -358,7 +279,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             validateForm();
             return true;
         } else if (id == android.R.id.home) {
-            dismiss();
+            finish();
             return true;
         }
 
@@ -396,7 +317,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                 editText.setText(selectedDate);
             }
         });
-        newFragment.show(getActivity().getSupportFragmentManager(), "datePicker");
+        newFragment.show(getSupportFragmentManager(), "datePicker");
     }
 
     private String twoDigits(int n) {
@@ -404,7 +325,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
     }
 
     private boolean validateEditText(EditText editText, TextInputLayout textInputLayout, int errorString) {
-        Log.d("ReportDialogFragment", "Validating an EditText with this value => " + editText.getText().toString());
+        // Log.d("ReportDialogFragment", "Validating an EditText with this value => " + editText.getText().toString());
         if (editText.getText().toString().length() < 1) {
             textInputLayout.setError(getString(errorString));
             return false;
@@ -455,7 +376,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
         final String aspect = spinnerAspect.getSelectedItem().toString();
         final String potential = spinnerPotential.getSelectedItem().toString();
 
-        final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
+        final int user_id = Global.getIntFromPreferences(this, "user_id");
 
         // If the report ID is ZERO, create a new record
         if (report_id == 0) {
@@ -488,11 +409,10 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                     if (response.isSuccessful()) {
                         NewReportResponse newReportResponse = response.body();
                         if (newReportResponse.isSuccess()) {
-                            Toast.makeText(getActivity(), "El reporte se ha registrado satisfactoriamente.", Toast.LENGTH_SHORT).show();
-                            dismiss();
-                            ((ReportsActivity) getActivity()).reloadReportsByInform();
+                            Toast.makeText(getApplicationContext(), "El reporte se ha registrado satisfactoriamente.", Toast.LENGTH_SHORT).show();
+                            finish();
                         } else {
-                            Toast.makeText(getActivity(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -529,11 +449,10 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                     if (response.isSuccessful()) {
                         NewReportResponse newReportResponse = response.body();
                         if (newReportResponse.isSuccess()) {
-                            Toast.makeText(getActivity(), "El reporte se ha modificado correctamente.", Toast.LENGTH_SHORT).show();
-                            dismiss();
-                            ((ReportsActivity) getActivity()).reloadReportsByInform();
+                            Toast.makeText(getApplicationContext(), "El reporte se ha modificado correctamente.", Toast.LENGTH_SHORT).show();
+                            finish();
                         } else {
-                            Toast.makeText(getActivity(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -553,7 +472,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                 getResources().getString(R.string.picture_from_gallery),
                 getResources().getString(R.string.picture_cancel)
         };
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         // Title
         builder.setTitle(getResources().getString(R.string.picture_title));
@@ -568,7 +487,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                     // check for permission for newer APIs
                     if (Build.VERSION.SDK_INT >= 23) {
                         Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is TRUE");
-                        if (getActivity().checkSelfPermission(Manifest.permission.CAMERA)
+                        if (checkSelfPermission(Manifest.permission.CAMERA)
                                 == PackageManager.PERMISSION_GRANTED) {
                             // permission granted
                             Log.d("ReportDialogFragment", "Camera permission already granted");
@@ -658,7 +577,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
             } else if (requestCode == SELECT_FILE) {
                 Uri selectedImageUri = data.getData();
                 String[] projection = {MediaStore.MediaColumns.DATA};
-                CursorLoader cursorLoader = new CursorLoader(getActivity(),
+                CursorLoader cursorLoader = new CursorLoader(this,
                         selectedImageUri, projection, null, null, null);
                 Cursor cursor = cursorLoader.loadInBackground();
                 int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
@@ -689,7 +608,7 @@ public class ReportDialogFragment extends DialogFragment implements View.OnClick
                 startCameraIntent();
             } else {
                 // Your app will not have this permission.
-                Global.showMessageDialog(getActivity(), "Alerta", "No podrás subir capturar fotos con la cámara hasta que otorgues este permiso a la aplicación.");
+                Global.showMessageDialog(this, "Alerta", "No podrás subir capturar fotos con la cámara hasta que otorgues este permiso a la aplicación.");
             }
         }
     }
