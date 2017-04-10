@@ -118,8 +118,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
                     Intent intent = new Intent(activity, ReportDialogFragment.class);
                     intent.putExtra("inform_id", inform_id);
                     intent.putExtra("report_id", currentReport.getId());
-                    activity.startActivity(intent);
-
+                    activity.startActivityForResult(intent, 1); // is just a dummy request code
                 } else {
                     Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú mismo has creado.");
                 }

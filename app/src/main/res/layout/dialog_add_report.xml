@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,15 +8,15 @@
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme"
-        android:fitsSystemWindows="false">
+        android:fitsSystemWindows="false"
+        android:theme="@style/AppTheme">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:layout_scrollFlags="scroll|enterAlways"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark" />
+            android:theme="@style/ThemeOverlay.AppCompat.Dark"
+            app:layout_scrollFlags="scroll|enterAlways" />
 
     </android.support.design.widget.AppBarLayout>
 
@@ -27,8 +26,7 @@
         android:background="#ffffff"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -40,121 +38,141 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/tilDescription"
-                android:theme="@style/TextLabel"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel">
 
                 <EditText
                     android:id="@+id/etDescription"
-                    android:hint="@string/report_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="@string/report_description"
                     android:inputType="textNoSuggestions"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="Capturar imagen del reporte:"
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
                 android:gravity="center"
-                android:layout_height="wrap_content" />
+                android:text="Capturar imagen del reporte:" />
+
             <ImageButton
                 android:id="@+id/btnTakeImage"
-                app:srcCompat="@drawable/ic_camera_alt_24dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_camera_alt_24dp" />
+
             <ImageView
                 android:id="@+id/ivImage"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
-                android:src="@mipmap/logo"/>
+                android:src="@mipmap/logo" />
 
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="@string/report_work_front"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/report_work_front" />
             <Spinner
                 android:id="@+id/spinnerWorkFront"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="@string/report_area"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/report_area" />
             <Spinner
                 android:id="@+id/spinnerArea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="@string/report_responsible"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/report_responsible" />
             <Spinner
                 android:id="@+id/spinnerResponsible"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Email:" />
+            <TextView
+                android:id="@+id/tvPosition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cargo:" />
+            <TextView
+                android:id="@+id/tvDepartment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Departamento:" />
+
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/tilPlannedDate"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
 
                 <EditText
                     android:id="@+id/etPlannedDate"
-                    android:hint="@string/report_planned_date"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="date"
-                    android:focusable="false"
                     android:clickable="true"
+                    android:focusable="false"
+                    android:hint="@string/report_planned_date"
+                    android:inputType="date"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/tilDeadline"
-                android:theme="@style/TextLabel"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel">
 
                 <EditText
                     android:id="@+id/etDeadline"
-                    android:hint="@string/report_deadline"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="date"
-                    android:focusable="false"
                     android:clickable="true"
+                    android:focusable="false"
+                    android:hint="@string/report_deadline"
+                    android:inputType="date"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="@string/report_state"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/report_state" />
+
             <Spinner
                 android:id="@+id/spinnerState"
-                android:entries="@array/state_options"
                 style="?android:attr/dropDownItemStyle"
-                android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
                 android:layout_width="match_parent"
                 android:layout_height="?android:attr/listPreferredItemHeight"
-                android:ellipsize="marquee" />
+                android:ellipsize="marquee"
+                android:entries="@array/state_options"
+                android:textAppearance="?android:attr/textAppearanceLargePopupMenu" />
 
             <TextView
-                android:layout_marginTop="8dp"
-                android:layout_gravity="center"
-                android:text="Acciones"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:text="Acciones" />
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/tilActions"
@@ -163,56 +181,60 @@
 
                 <EditText
                     android:id="@+id/etActions"
-                    android:hint="@string/report_actions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="@string/report_actions"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="Capturar imagen de las acciones:"
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
                 android:gravity="center"
-                android:layout_height="wrap_content" />
+                android:text="Capturar imagen de las acciones:" />
+
             <ImageButton
                 android:id="@+id/btnTakeImageAction"
-                app:srcCompat="@drawable/ic_camera_alt_24dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_camera_alt_24dp" />
+
             <ImageView
                 android:id="@+id/ivImageAction"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
-                android:src="@mipmap/logo"/>
+                android:src="@mipmap/logo" />
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="@string/report_aspect"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/report_aspect" />
+
             <Spinner
                 android:id="@+id/spinnerAspect"
-                android:entries="@array/aspect_options"
                 style="?android:attr/dropDownItemStyle"
-                android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
                 android:layout_width="match_parent"
                 android:layout_height="?android:attr/listPreferredItemHeight"
-                android:ellipsize="marquee" />
+                android:ellipsize="marquee"
+                android:entries="@array/aspect_options"
+                android:textAppearance="?android:attr/textAppearanceLargePopupMenu" />
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="@string/report_potential"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/report_potential" />
+
             <Spinner
                 android:id="@+id/spinnerPotential"
-                android:entries="@array/potential_options"
                 style="?android:attr/dropDownItemStyle"
-                android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
                 android:layout_width="match_parent"
                 android:layout_height="?android:attr/listPreferredItemHeight"
-                android:ellipsize="marquee" />
+                android:ellipsize="marquee"
+                android:entries="@array/potential_options"
+                android:textAppearance="?android:attr/textAppearanceLargePopupMenu" />
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/tilInspections"
@@ -221,19 +243,20 @@
 
                 <EditText
                     android:id="@+id/etInspections"
-                    android:text="1"
-                    android:hint="@string/report_inspections"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="@string/report_inspections"
                     android:inputType="number"
-                    android:maxLines="1" />
+                    android:maxLines="1"
+                    android:text="1" />
             </android.support.design.widget.TextInputLayout>
 
             <TextView
-                android:layout_marginTop="6dp"
-                android:text="@string/report_critical_risk"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/report_critical_risk" />
+
             <Spinner
                 android:id="@+id/spinnerCriticalRisk"
                 android:layout_width="match_parent"
@@ -246,9 +269,9 @@
 
                 <EditText
                     android:id="@+id/etObservations"
-                    android:hint="@string/report_observations"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="@string/report_observations"
                     android:inputType="textNoSuggestions"
                     android:maxLines="2" />
             </android.support.design.widget.TextInputLayout>

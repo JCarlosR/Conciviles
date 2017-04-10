@@ -3,8 +3,6 @@ package com.programacionymas.conciviles.ui.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,7 +13,6 @@ import android.view.View;
 
 import com.google.gson.Gson;
 import com.programacionymas.conciviles.Global;
-import com.programacionymas.conciviles.ObjectSerializer;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.model.Area;
@@ -26,7 +23,6 @@ import com.programacionymas.conciviles.model.WorkFront;
 import com.programacionymas.conciviles.ui.adapter.ReportAdapter;
 import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import retrofit2.Call;
@@ -243,7 +239,15 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         Intent intent = new Intent(this, ReportDialogFragment.class);
         intent.putExtra("inform_id", inform_id);
         intent.putExtra("report_id", 0);
-        startActivity(intent);
+        startActivityForResult(intent, 1); // 1 is the request code
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode==RESULT_OK) {
+            reloadReportsByInform();
+        }
     }
 }

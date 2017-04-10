@@ -24,12 +24,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -62,6 +64,8 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
     private ImageButton btnTakeImage, btnTakeImageAction;
     private Spinner spinnerWorkFront, spinnerArea, spinnerResponsible, spinnerCriticalRisk;
     private Spinner spinnerState, spinnerAspect, spinnerPotential;
+
+    private TextView tvEmail, tvPosition, tvDepartment;
 
     private ImageView ivImage, ivImageAction;
 
@@ -147,6 +151,11 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         spinnerResponsible = (Spinner) findViewById(R.id.spinnerResponsible);
         spinnerCriticalRisk = (Spinner) findViewById(R.id.spinnerCriticalRisk);
 
+        // additional user indicators
+        tvEmail = (TextView) findViewById(R.id.tvEmail);
+        tvPosition = (TextView) findViewById(R.id.tvPosition);
+        tvDepartment = (TextView) findViewById(R.id.tvDepartment);
+
         // spinner with predefined options
         spinnerState = (Spinner) findViewById(R.id.spinnerState);
         spinnerAspect = (Spinner) findViewById(R.id.spinnerAspect);
@@ -218,6 +227,24 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         final String responsibleUsersSerialized = Global.getStringFromPreferences(this, "responsible_users");
         responsibleUsers = new Gson().fromJson(responsibleUsersSerialized, new TypeToken<ArrayList<User>>(){}.getType());
         populateResponsibleSpinner();
+        spinnerResponsible.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                final int i = Global.getSpinnerSelectedIndex(spinnerResponsible);
+
+                tvEmail.setText("Email: " + responsibleUsers.get(i).getEmail());
+                tvPosition.setText("Cargo: " + responsibleUsers.get(i).getPosition());
+                tvDepartment.setText("Departamento: " + responsibleUsers.get(i).getDepartment());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                tvEmail.setText("Email: ");
+                tvPosition.setText("Cargo: ");
+                tvDepartment.setText("Departamento: ");
+            }
+
+        });
 
         final String criticalRisksSerialized = Global.getStringFromPreferences(this, "critical_risks");
         criticalRisks = new Gson().fromJson(criticalRisksSerialized, new TypeToken<ArrayList<CriticalRisk>>(){}.getType());
@@ -410,6 +437,7 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
                         NewReportResponse newReportResponse = response.body();
                         if (newReportResponse.isSuccess()) {
                             Toast.makeText(getApplicationContext(), "El reporte se ha registrado satisfactoriamente.", Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK);
                             finish();
                         } else {
                             Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
@@ -450,6 +478,7 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
                         NewReportResponse newReportResponse = response.body();
                         if (newReportResponse.isSuccess()) {
                             Toast.makeText(getApplicationContext(), "El reporte se ha modificado correctamente.", Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK);
                             finish();
                         } else {
                             Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();

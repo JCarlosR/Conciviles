@@ -1,9 +1,17 @@
 package com.programacionymas.conciviles.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class User {
 
     private int id;
     private String name;
+    private String email;
+
+    @SerializedName("position_name")
+    private String position;
+    @SerializedName("department_name")
+    private String department;
 
     public int getId() {
         return id;
@@ -19,5 +27,29 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
 }
