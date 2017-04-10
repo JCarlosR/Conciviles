@@ -27,6 +27,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
 
     private Activity activity;
     private int inform_id;
+    private int author_inform_id;
 
     private ArrayList<Report> reports;
 
@@ -60,10 +61,12 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         }
     }
 
-    public ReportAdapter(Activity activity, final int inform_id) {
+    public ReportAdapter(Activity activity, final int inform_id, final int author_inform_id) {
         this.activity = activity;
         this.reports = new ArrayList<>();
+
         this.inform_id = inform_id;
+        this.author_inform_id = author_inform_id;
     }
 
     public void setReportsData(ArrayList<Report> reports) {
@@ -112,7 +115,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         holder.btnEditReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (authenticated_user_id == currentReport.getUserId()) {
+                if (authenticated_user_id == currentReport.getUserId() || authenticated_user_id == author_inform_id) {
 
                     // Empty report_id => Register new report
                     Intent intent = new Intent(activity, ReportDialogFragment.class);

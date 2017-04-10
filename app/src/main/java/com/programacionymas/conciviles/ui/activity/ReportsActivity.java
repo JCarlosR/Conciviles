@@ -35,6 +35,7 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     private ReportAdapter adapter;
 
     private static int inform_id;
+    private int author_inform_id;
     private boolean inform_editable;
 
     @Override
@@ -43,6 +44,7 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         setContentView(R.layout.activity_reports);
 
         inform_id = getIntent().getIntExtra("inform_id", 0);
+        author_inform_id = getIntent().getIntExtra("author_inform_id", 0);
         inform_editable = getIntent().getBooleanExtra("inform_editable", false);
 
         setupRecyclerView();
@@ -174,7 +176,7 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        adapter = new ReportAdapter(this, inform_id);
+        adapter = new ReportAdapter(this, inform_id, author_inform_id);
         recyclerView.setAdapter(adapter);
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);

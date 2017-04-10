@@ -15,6 +15,7 @@ import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.model.Inform;
+import com.programacionymas.conciviles.ui.activity.MenuActivity;
 import com.programacionymas.conciviles.ui.adapter.InformAdapter;
 
 import java.util.ArrayList;
