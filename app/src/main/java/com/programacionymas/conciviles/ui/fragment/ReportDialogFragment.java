@@ -605,7 +605,7 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
                     Log.d("ReportDialogFragment", "Cannot delete file: " + currentPhotoPath);*/
             } else if (requestCode == SELECT_FILE) {
                 Uri selectedImageUri = data.getData();
-                String[] projection = {MediaStore.MediaColumns.DATA};
+                String[] projection = { MediaStore.MediaColumns.DATA };
                 CursorLoader cursorLoader = new CursorLoader(this,
                         selectedImageUri, projection, null, null, null);
                 Cursor cursor = cursorLoader.loadInBackground();
@@ -618,6 +618,7 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
                 // final String extension = selectedImagePath.substring(lastDot+1);
 
                 Bitmap bitmap = BitmapFactory.decodeFile(selectedImagePath);
+                bitmap = Global.getThumbnailFromBitmap(bitmap);
                 ivTarget.setImageBitmap(bitmap);
 
                 if (ivTarget == ivImage)

@@ -17,6 +17,22 @@ import java.io.ByteArrayOutputStream;
 
 public class Global {
 
+    public static Bitmap /*byte[]*/ getThumbnailFromBitmap(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        double height = bitmap.getHeight();
+        double width = bitmap.getWidth();
+        double divisor = 2;
+
+        while (height/divisor >= 400 || width/divisor >= 400) {
+            divisor += 0.5;
+        }
+
+        /*Bitmap thumbnailBitmap =*/ return Bitmap.createScaledBitmap(bitmap, (int) (width/divisor), (int) (height/divisor), false);
+        // thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 60, stream);
+        // return stream.toByteArray();
+    }
+
     public static String getBase64FromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
