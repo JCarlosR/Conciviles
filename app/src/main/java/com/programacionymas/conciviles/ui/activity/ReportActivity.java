@@ -1,15 +1,20 @@
 package com.programacionymas.conciviles.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
+import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
 import com.squareup.picasso.Picasso;
 
 public class ReportActivity extends AppCompatActivity {
@@ -23,6 +28,7 @@ public class ReportActivity extends AppCompatActivity {
 
     private ImageView ivImage, ivImageAction;
 
+    private FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +65,27 @@ public class ReportActivity extends AppCompatActivity {
 
         ivImage = (ImageView) findViewById(R.id.ivImage);
         ivImageAction = (ImageView) findViewById(R.id.ivImageAction);
+
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nestedScrollView);
+        nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                if (scrollY > oldScrollY) {
+                    fab.hide();
+                } else {
+                    fab.show();
+                }
+            }
+        });
+
    }
 
     private void getReportDataFromExtras() {
         final String reportJson = getIntent().getStringExtra("report");
+        final int inform_id = getIntent().getIntExtra("inform_id",0);
+
         final Report report = new Gson().fromJson(reportJson, Report.class);
 
         setReportIdInActionBar(report.getId());
@@ -85,6 +108,17 @@ public class ReportActivity extends AppCompatActivity {
         tvInspections.setText(String.valueOf(report.getInspections()));
         tvCriticalRisk.setText(report.getCriticalRisksName());
         tvObservations.setText(report.getObservations());
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Empty report_id => Register new report
+                Intent intent = new Intent(getApplicationContext(), ReportDialogFragment.class);
+                intent.putExtra("inform_id", inform_id);
+                intent.putExtra("report_id", report.getId());
+                startActivityForResult(intent, 1); // is just a dummy request code
+            }
+        });
     }
 
     private void setReportIdInActionBar(final int report_id) {

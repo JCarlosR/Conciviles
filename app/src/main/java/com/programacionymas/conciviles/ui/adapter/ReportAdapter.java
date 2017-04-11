@@ -106,6 +106,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             public void onClick(View view) {
                 Intent intent = new Intent(activity, ReportActivity.class);
                 intent.putExtra("report", new Gson().toJson(currentReport));
+                intent.putExtra("inform_id", inform_id);
                 activity.startActivity(intent);
             }
         });
