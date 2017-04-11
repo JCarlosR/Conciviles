@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -33,9 +34,11 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
+        LinearLayout llClosedReport;
+
         TextView tvReportId, tvDescription, tvAuthorAndCreatedAt,
                 tvWorkFrontName, tvAreaName, tvResponsibleName,
-                tvPlannedDate, tvDeadline, tvState;
+                tvPlannedDate, tvDeadline, tvOpenedReport;
 
         Button btnShowReport, btnEditReport;
 
@@ -52,7 +55,9 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             tvResponsibleName = (TextView) v.findViewById(R.id.tvResponsibleName);
             tvPlannedDate = (TextView) v.findViewById(R.id.tvPlannedDate);
             tvDeadline = (TextView) v.findViewById(R.id.tvDeadline);
-            tvState = (TextView) v.findViewById(R.id.tvState);
+
+            llClosedReport = (LinearLayout) v.findViewById(R.id.llClosedReport);
+            tvOpenedReport = (TextView) v.findViewById(R.id.tvOpenedReport);
 
             ivImage = (ImageView) v.findViewById(R.id.ivImage);
 
@@ -97,7 +102,15 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         holder.tvResponsibleName.setText(currentReport.getResponsibleName());
         holder.tvPlannedDate.setText(currentReport.getPlannedDate());
         holder.tvDeadline.setText(currentReport.getDeadline());
-        holder.tvState.setText(currentReport.getState());
+
+        if (currentReport.getState().equals("Abierto")) {
+            holder.tvOpenedReport.setVisibility(View.VISIBLE);
+            holder.llClosedReport.setVisibility(View.GONE);
+        } else {
+            holder.tvOpenedReport.setVisibility(View.GONE);
+            holder.llClosedReport.setVisibility(View.VISIBLE);
+        }
+
 
         Picasso.with(activity).load(currentReport.getImage()).into(holder.ivImage);
 

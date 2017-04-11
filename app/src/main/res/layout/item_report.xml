@@ -163,6 +163,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/llClosedReport"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
@@ -176,14 +177,21 @@
                     android:text="Estado:" />
 
                 <TextView
-                    android:id="@+id/tvState"
                     android:gravity="center"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:text="Abierto" />
+                    android:text="Cerrado" />
 
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvOpenedReport"
+                android:gravity="center"
+                android:text="ESTE REPORTE SE ENCUENTRA ABIERTO"
+                android:textColor="@color/colorDanger"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
 
