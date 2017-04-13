@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.content.CursorLoader;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -30,6 +31,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -96,6 +98,13 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
     // Images stored as base64
     private String image, imageAction;
+
+    // Already storing the report (request)
+    private boolean storing;
+
+    // General views
+    private ProgressBar progressBar;
+    private NestedScrollView nestedScrollView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -177,6 +186,10 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         // image references
         ivImage = (ImageView) findViewById(R.id.ivImage);
         ivImageAction = (ImageView) findViewById(R.id.ivImageAction);
+
+        // nested scroll view and progress bar
+        nestedScrollView = (NestedScrollView) findViewById(R.id.nestedScrollView);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
     }
 
     private void fetchReportDataFromServer(final int report_id) {
@@ -293,6 +306,13 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
     }
 
     @Override
+    public boolean onPrepareOptionsMenu (Menu menu) {
+        menu.findItem(R.id.save).setEnabled(!storing);
+
+        return true;
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.save_menu, menu);
         return true;
@@ -405,6 +425,8 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
         final int user_id = Global.getIntFromPreferences(this, "user_id");
 
+        startStoringState();
+
         // If the report ID is ZERO, create a new record
         if (report_id == 0) {
             // Log.d("ReportDialogFragment", "Going to post a new report");
@@ -440,6 +462,7 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
                             setResult(RESULT_OK);
                             finish();
                         } else {
+                            stopStoringState();
                             Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -447,7 +470,8 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
                 @Override
                 public void onFailure(Call<NewReportResponse> call, Throwable t) {
-                    Log.d("ReportDialogFragment", "onFailure => " + t.getLocalizedMessage());
+                    stopStoringState();
+                    Toast.makeText(getApplicationContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
         } else { // edit the selected report
@@ -481,6 +505,7 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
                             setResult(RESULT_OK);
                             finish();
                         } else {
+                            stopStoringState();
                             Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -488,7 +513,8 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
                 @Override
                 public void onFailure(Call<NewReportResponse> call, Throwable t) {
-                    Log.d("ReportDialogFragment", "onFailure => " + t.getLocalizedMessage());
+                    stopStoringState();
+                    Toast.makeText(getApplicationContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -643,4 +669,19 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         }
     }
 
+    private void startStoringState() {
+        storing = true;
+        invalidateOptionsMenu();
+
+        nestedScrollView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void stopStoringState() {
+        storing = false;
+        invalidateOptionsMenu();
+
+        nestedScrollView.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.GONE);
+    }
 }

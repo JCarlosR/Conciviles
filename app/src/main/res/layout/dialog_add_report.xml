@@ -20,14 +20,21 @@
 
     </android.support.design.widget.AppBarLayout>
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
     <android.support.v4.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ffffff"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
@@ -75,6 +82,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="@string/report_work_front" />
+
             <Spinner
                 android:id="@+id/spinnerWorkFront"
                 android:layout_width="match_parent"
@@ -85,6 +93,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="@string/report_area" />
+
             <Spinner
                 android:id="@+id/spinnerArea"
                 android:layout_width="match_parent"
@@ -95,6 +104,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="@string/report_responsible" />
+
             <Spinner
                 android:id="@+id/spinnerResponsible"
                 android:layout_width="match_parent"
@@ -105,11 +115,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Email:" />
+
             <TextView
                 android:id="@+id/tvPosition"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Cargo:" />
+
             <TextView
                 android:id="@+id/tvDepartment"
                 android:layout_width="match_parent"
