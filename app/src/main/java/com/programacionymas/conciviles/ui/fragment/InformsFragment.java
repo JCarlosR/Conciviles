@@ -1,10 +1,15 @@
 package com.programacionymas.conciviles.ui.fragment;
 
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +19,7 @@ import android.view.ViewGroup;
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
 import com.programacionymas.conciviles.model.Inform;
 import com.programacionymas.conciviles.ui.activity.MenuActivity;
 import com.programacionymas.conciviles.ui.adapter.InformAdapter;
@@ -24,7 +30,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class InformsFragment extends Fragment implements Callback<ArrayList<Inform>> {
+public class InformsFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private InformAdapter adapter;
@@ -53,9 +59,12 @@ public class InformsFragment extends Fragment implements Callback<ArrayList<Info
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
-        Call<ArrayList<Inform>> call = MyApiAdapter.getApiService().getInformsByLocationOfUser(user_id);
-        call.enqueue(this);
+        readInformsFromSQLite();
+    }
+
+    private void readInformsFromSQLite() {
+        MyDbHelper myDbHelper = new MyDbHelper(getContext());
+        adapter.setInformsData(myDbHelper.getInforms());
     }
 
     private void setupRecyclerView(View v) {
@@ -93,16 +102,33 @@ public class InformsFragment extends Fragment implements Callback<ArrayList<Info
         });
     }
 
-    @Override
-    public void onResponse(Call<ArrayList<Inform>> call, Response<ArrayList<Inform>> response) {
-        if (response.isSuccessful()) {
-            ArrayList<Inform> informs = response.body();
-            adapter.setInformsData(informs);
+
+    // Broadcast receiver
+
+    private BroadcastReceiver updateInformReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            readInformsFromSQLite();
+            // optional we can read parameters from intent extras
+            // String message = intent.getStringExtra("message");
         }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Register updateInformReceiver to receive messages
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(
+                updateInformReceiver, new IntentFilter("event-update-informs")
+        );
     }
 
     @Override
-    public void onFailure(Call<ArrayList<Inform>> call, Throwable t) {
-        Global.showMessageDialog(getContext(), "Error", "No se ha podido obtener la lista de informes de su localización.");
+    public void onPause() {
+        // Unregister since the activity is not visible
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(updateInformReceiver);
+
+        super.onPause();
     }
 }

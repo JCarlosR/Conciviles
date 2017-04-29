@@ -128,6 +128,13 @@ public class Global {
         editor.apply();
     }
 
+    public static void saveLongPreference(Context context, String key, long value) {
+        SharedPreferences sharedPref = context.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putLong(key, value);
+        editor.apply();
+    }
+
     public static int getIntFromPreferences(Activity activity, String key) {
         SharedPreferences sharedPref = activity.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
         return sharedPref.getInt(key, 0);
@@ -136,6 +143,11 @@ public class Global {
     public static String getStringFromPreferences(Activity activity, String key) {
         SharedPreferences sharedPref = activity.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
         return sharedPref.getString(key, "");
+    }
+
+    public static Long getLongFromPreferences(Context context, String key) {
+        SharedPreferences sharedPref = context.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
+        return sharedPref.getLong(key, 0);
     }
 
 }

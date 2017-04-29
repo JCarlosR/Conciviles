@@ -1,5 +1,9 @@
 package com.programacionymas.conciviles.model;
 
+import android.content.ContentValues;
+
+import com.programacionymas.conciviles.io.sqlite.MyDbContract.InformEntry;
+
 /*
 {
     "user_id":6,
@@ -17,7 +21,7 @@ public class Inform {
     private String to_date_format;
     private String created_at;
     private String user_name;
-    private boolean isEditable;
+    private boolean is_editable;
 
     public int getUserId() {
         return user_id;
@@ -68,10 +72,22 @@ public class Inform {
     }
 
     public boolean isEditable() {
-        return isEditable;
+        return is_editable;
     }
 
     public void setEditable(boolean editable) {
-        isEditable = editable;
+        is_editable = editable;
+    }
+
+    public ContentValues getContentValues() {
+        ContentValues values = new ContentValues();
+        values.put(InformEntry.COLUMN_ID, getId());
+        values.put(InformEntry.COLUMN_USER_ID, getUserId());
+        values.put(InformEntry.COLUMN_FROM_DATE, getFromDate());
+        values.put(InformEntry.COLUMN_TO_DATE, getToDate());
+        values.put(InformEntry.COLUMN_CREATED_AT, getCreatedAt());
+        values.put(InformEntry.COLUMN_USER_NAME, getUserName());
+        values.put(InformEntry.COLUMN_IS_EDITABLE, isEditable());
+        return values;
     }
 }

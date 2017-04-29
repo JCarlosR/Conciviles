@@ -2,10 +2,12 @@ package com.programacionymas.conciviles.ui.fragment;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -42,6 +44,8 @@ import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.response.NewReportResponse;
+import com.programacionymas.conciviles.io.sqlite.MyDbContract;
+import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
 import com.programacionymas.conciviles.model.Area;
 import com.programacionymas.conciviles.model.CriticalRisk;
 import com.programacionymas.conciviles.model.Report;
@@ -274,6 +278,18 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
     }
 
     private void populateAreaSpinner() {
+/*        MyDbHelper mDbHelper = new MyDbHelper(this);
+        // Gets the data repository in write mode
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(MyDbContract.AreaEntry.COLUMN_NAME, "XD");
+
+        // Insert the new row, returning the primary key value of the new row
+        long newRowId = db.insert(MyDbContract.AreaEntry.TABLE_NAME, null, values);
+
+*/
+
         List<String> options = new ArrayList<String>();
         for (Area area : areas) {
             options.add(area.getName());
