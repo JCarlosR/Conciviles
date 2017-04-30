@@ -40,15 +40,8 @@ public class MenuActivity extends AppCompatActivity
         }
     };
 
-    private boolean isConnected() {
-        ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
-
-        return networkInfo != null && networkInfo.isConnectedOrConnecting();
-    }
-
     private void startServiceIfConnected() {
-        if (isConnected()) {
+        if (Global.isConnected(getApplicationContext())) {
             final int user_id = Global.getIntFromPreferences(this, "user_id");
 
             Intent serviceIntent = new Intent(this, MyService.class);

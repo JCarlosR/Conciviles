@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
 import com.programacionymas.conciviles.ui.activity.ReportActivity;
 import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
+import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -111,8 +113,12 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             holder.llClosedReport.setVisibility(View.VISIBLE);
         }
 
-
-        Picasso.with(activity).load(currentReport.getImage()).into(holder.ivImage);
+        Log.d("ReportAdapter", "isConnected? => " + String.valueOf(Global.isConnected(activity)));
+        if (Global.isConnected(activity))
+            Picasso.with(activity).load(currentReport.getImage()).into(holder.ivImage);
+        else
+            Picasso.with(activity).load(currentReport.getImage())
+                    .networkPolicy(NetworkPolicy.OFFLINE).into(holder.ivImage);
 
         holder.btnShowReport.setOnClickListener(new View.OnClickListener() {
             @Override

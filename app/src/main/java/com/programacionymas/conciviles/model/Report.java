@@ -1,5 +1,9 @@
 package com.programacionymas.conciviles.model;
 
+import android.content.ContentValues;
+
+import com.programacionymas.conciviles.io.sqlite.MyDbContract.ReportEntry;
+
 public class Report {
 
 /*
@@ -181,5 +185,33 @@ public class Report {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public ContentValues getContentValues(final int inform_id) {
+        ContentValues values = new ContentValues();
+
+        values.put(ReportEntry.COLUMN_ID, getId());
+        values.put(ReportEntry.COLUMN_INFORM_ID, inform_id); // it is not stored in the model
+
+        values.put(ReportEntry.COLUMN_USER_ID, getUserId());
+        values.put(ReportEntry.COLUMN_ASPECT, getAspect());
+        values.put(ReportEntry.COLUMN_POTENTIAL, getPotential());
+        values.put(ReportEntry.COLUMN_STATE, getState());
+        values.put(ReportEntry.COLUMN_IMG, getImage());
+        values.put(ReportEntry.COLUMN_IMG_ACTION, getImageAction());
+        values.put(ReportEntry.COLUMN_PLANNED_DATE, getPlannedDate());
+        values.put(ReportEntry.COLUMN_DEADLINE, getDeadline());
+        values.put(ReportEntry.COLUMN_INSPECTIONS, getInspections());
+        values.put(ReportEntry.COLUMN_DESCRIP, getDescription());
+        values.put(ReportEntry.COLUMN_ACTIONS, getActions());
+        values.put(ReportEntry.COLUMN_OBS, getObservations());
+
+        values.put(ReportEntry.COLUMN_CREATED_AT, getCreatedAt());
+        values.put(ReportEntry.COLUMN_WORK_FRONT_NAME, getWorkFrontName());
+        values.put(ReportEntry.COLUMN_AREA_NAME, getAreaName());
+        values.put(ReportEntry.COLUMN_RESPONSIBLE, getResponsibleName());
+        values.put(ReportEntry.COLUMN_CRIT_RISKS, getCriticalRisksName());
+
+        return values;
     }
 }

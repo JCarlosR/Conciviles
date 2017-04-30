@@ -1,8 +1,12 @@
 package com.programacionymas.conciviles.ui.activity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +19,7 @@ import com.google.gson.Gson;
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
 import com.programacionymas.conciviles.model.Area;
 import com.programacionymas.conciviles.model.CriticalRisk;
 import com.programacionymas.conciviles.model.Report;
@@ -29,7 +34,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ReportsActivity extends AppCompatActivity implements Callback<ArrayList<Report>>, View.OnClickListener {
+public class ReportsActivity extends AppCompatActivity implements View.OnClickListener {
 
     private RecyclerView recyclerView;
     private ReportAdapter adapter;
@@ -148,8 +153,12 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     }
 
     public void reloadReportsByInform() {
-        Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform_id);
-        call.enqueue(this);
+        MyDbHelper myDbHelper = new MyDbHelper(this);
+        ArrayList<Report> reports = myDbHelper.getReports(inform_id);
+        if (reports.size() > 0)
+            adapter.setReportsData(reports);
+        else
+            Global.showMessageDialog(getApplicationContext(), "Error", "No se han podido obtener los reportes del informe seleccionado.");
     }
 
     @Override
@@ -213,19 +222,6 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     }
 
     @Override
-    public void onResponse(Call<ArrayList<Report>> call, Response<ArrayList<Report>> response) {
-        if (response.isSuccessful()) {
-            ArrayList<Report> reports = response.body();
-            adapter.setReportsData(reports);
-        }
-    }
-
-    @Override
-    public void onFailure(Call<ArrayList<Report>> call, Throwable t) {
-        Global.showMessageDialog(this, "Error", "No se han podido obtener los reportes del informe seleccionado.");
-    }
-
-    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fab:
@@ -235,7 +231,6 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     }
 
     private void showDialogNewReport() {
-        // Log.d("ReportsActivity", "showDialogNewReport fired");
 
         // Empty report_id => Register new report
         Intent intent = new Intent(this, ReportDialogFragment.class);
@@ -248,8 +243,41 @@ public class ReportsActivity extends AppCompatActivity implements Callback<Array
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode==RESULT_OK) {
+        if (resultCode == RESULT_OK) {
             reloadReportsByInform();
         }
+    }
+
+    // Broadcast receiver
+
+    private BroadcastReceiver updateReportsReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final int updated_inform_id = intent.getIntExtra("inform_id", 0);
+            if (updated_inform_id == 0) return; // it should never happen
+
+            if (updated_inform_id == inform_id) {
+                // update the recyclerView only if the user is viewing the updated reports
+                reloadReportsByInform();
+            }
+        }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Register updateReportsReceiver to receive messages
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                updateReportsReceiver, new IntentFilter("event-update-reports")
+        );
+    }
+
+    @Override
+    public void onPause() {
+        // Unregister since the activity is not visible
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(updateReportsReceiver);
+
+        super.onPause();
     }
 }

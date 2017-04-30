@@ -13,6 +13,7 @@ import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.sqlite.MyDbContract;
 import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
 import com.programacionymas.conciviles.model.Inform;
+import com.programacionymas.conciviles.model.Report;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,10 +35,17 @@ public class MyService extends Service {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    private static boolean alreadyRunning = false;
     private static int tries = 0;
+    private static boolean pendingRequests = false;
 
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
+        // end, to avoid execute onStartCommand multiple times (even simultaneously)
+        if (alreadyRunning) return super.onStartCommand(intent, flags, startId);
+
+        alreadyRunning = true;
+
         final Handler mHandler = new Handler();
         mRunnable = new Runnable() {
             @Override
@@ -51,6 +59,12 @@ public class MyService extends Service {
 
                 if (!isInfoAvailable || hasPassedAtLeast2Mins())
                     downloadInforms(intent.getIntExtra("user_id", 0));
+
+                if (! pendingRequests) { // THIS VARIABLE IS CURRENTLY USELESS: IN THE FUTURE I WILL ADD TRIES FOR EACH REPORT REQUEST
+                    // stop the service
+                    alreadyRunning = false;
+                    stopSelf();
+                }
 
                 mHandler.postDelayed(mRunnable, 20 * 1000); // next delays are 20 seconds
             }
@@ -85,18 +99,21 @@ public class MyService extends Service {
             @Override
             public void onResponse(Call<ArrayList<Inform>> call, Response<ArrayList<Inform>> response) {
                 if (response.isSuccessful()) {
-                    Log.d("MyService", "HTTP Request performed");
+                    Log.d("MyService", "HTTP Request for informs performed");
                     ArrayList<Inform> informs = response.body();
                     MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
                     myHelper.updateInformsTable(informs);
                     notifyInformsUiTobeUpdated();
 
+                    // Continue downloading the reports
+                    downloadReportsByInform(informs);
+
                     // Save the time for the last download
                     long currentTime = new Date().getTime();
                     Global.saveLongPreference(getApplicationContext(), "lastTime", currentTime);
 
-                    // and stop the service
-                    stopSelf();
+                    // Reset the tries count
+                    tries = 0;
                 } else {
                     // try 3 times
                     ++tries;
@@ -116,5 +133,32 @@ public class MyService extends Service {
         Intent intent = new Intent("event-update-informs");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         Log.d("MyService", "Broadcast to update informs sent");
+    }
+
+    private void notifyReportsUiTobeUpdated(final int inform_id) {
+        Intent intent = new Intent("event-update-reports");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Log.d("MyService", "Broadcast to update report sent (inform_id = "+inform_id+")");
+    }
+
+    private void downloadReportsByInform(ArrayList<Inform> informs) {
+        for (final Inform inform : informs) {
+            Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform.getId());
+            call.enqueue(new Callback<ArrayList<Report>>() {
+                @Override
+                public void onResponse(Call<ArrayList<Report>> call, Response<ArrayList<Report>> response) {
+                    if (response.isSuccessful()) {
+                        ArrayList<Report> reports = response.body();
+                        MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+                        myHelper.updateReportsForInform(reports, inform.getId());
+                        notifyReportsUiTobeUpdated(inform.getId());
+                    }
+                }
+                @Override
+                public void onFailure(Call<ArrayList<Report>> call, Throwable t) {
+                    Toast.makeText(MyService.this, "No se han podido actualizar los reportes del informe "+inform.getId()+".", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 }
