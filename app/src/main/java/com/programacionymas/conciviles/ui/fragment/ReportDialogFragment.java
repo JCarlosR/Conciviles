@@ -376,15 +376,11 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                 // +1 because january is zero
-                final String selectedDate = year + "-" + twoDigits(month+1) + "-" + twoDigits(day);
+                final String selectedDate = year + "-" + Global.twoDigits(month+1) + "-" + Global.twoDigits(day);
                 editText.setText(selectedDate);
             }
         });
         newFragment.show(getSupportFragmentManager(), "datePicker");
-    }
-
-    private String twoDigits(int n) {
-        return (n<=9) ? ("0"+n) : String.valueOf(n);
     }
 
     private boolean validateEditText(EditText editText, TextInputLayout textInputLayout, int errorString) {

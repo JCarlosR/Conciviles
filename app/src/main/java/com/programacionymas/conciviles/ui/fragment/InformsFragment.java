@@ -15,12 +15,14 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
 import com.programacionymas.conciviles.model.Inform;
+import com.programacionymas.conciviles.ui.activity.InformActivity;
 import com.programacionymas.conciviles.ui.activity.MenuActivity;
 import com.programacionymas.conciviles.ui.adapter.InformAdapter;
 
@@ -46,6 +48,7 @@ public class InformsFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_informs, container, false);
 
         setupRecyclerView(v);
+        setupFloatingActionButton(v);
 
         return v;
     }
@@ -102,6 +105,21 @@ public class InformsFragment extends Fragment {
         });
     }
 
+    private void setupFloatingActionButton(View v) {
+        FloatingActionButton fab = (FloatingActionButton) v.findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (! Global.isConnected(getContext())) {
+                    Toast.makeText(getContext(), "El registro de informes solo está disponible de modo online.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                Intent intent = new Intent(getContext(), InformActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
 
     // Broadcast receiver
 

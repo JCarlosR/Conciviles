@@ -19,6 +19,12 @@ import java.io.ByteArrayOutputStream;
 
 public class Global {
 
+    // utility methods
+
+    public static String twoDigits(int n) {
+        return (n<=9) ? ("0"+n) : String.valueOf(n);
+    }
+
     public static Bitmap /*byte[]*/ getThumbnailFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 

@@ -1,6 +1,7 @@
 package com.programacionymas.conciviles.io;
 
 import com.programacionymas.conciviles.io.response.LoginResponse;
+import com.programacionymas.conciviles.io.response.NewInformResponse;
 import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.io.response.ProfileResponse;
 import com.programacionymas.conciviles.model.Area;
@@ -135,4 +136,11 @@ public interface MyApiService {
                                                     @Query("critical_risk") int critical_risk_id,
                                                     @Query("observations") String observations
     );
+
+    // New inform
+
+    @POST("informs")
+    Call<NewInformResponse> postNewInform(@Query("user_id") int user_id,
+                                          @Query("from_date") String fromDate,
+                                          @Query("to_date") String toDate);
 }
