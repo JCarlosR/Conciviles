@@ -95,7 +95,12 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
 
         final Report currentReport = reports.get(position);
 
-        final String reportTitle = "REPORTE " + currentReport.getId();
+        final int reportId = currentReport.getId();
+        String reportTitle = "REPORTE ";
+        if (reportId == 0)
+            reportTitle += "OFFLINE";
+        else reportTitle += String.valueOf(reportId);
+
         holder.tvReportId.setText(reportTitle);
         holder.tvDescription.setText(currentReport.getDescription());
         holder.tvAuthorAndCreatedAt.setText(currentReport.getCreatedAt()); // what user_id name
@@ -113,12 +118,20 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             holder.llClosedReport.setVisibility(View.VISIBLE);
         }
 
-        Log.d("ReportAdapter", "isConnected? => " + String.valueOf(Global.isConnected(activity)));
-        if (Global.isConnected(activity))
-            Picasso.with(activity).load(currentReport.getImage()).into(holder.ivImage);
-        else
-            Picasso.with(activity).load(currentReport.getImage())
-                    .networkPolicy(NetworkPolicy.OFFLINE).into(holder.ivImage);
+        // Log.d("ReportAdapter", "isConnected? => " + String.valueOf(Global.isConnected(activity)));
+
+        if (currentReport.wasOfflineEdited() || currentReport.getId() == 0) { // offline edited/created
+            // image action only is displayed in ReportActivity (when ONE report was selected in full view)
+
+            // show image from base64 strings if it exists
+            String base64 = currentReport.getImageBase64();
+            if (base64 != null && !base64.isEmpty())
+                holder.ivImage.setImageBitmap(Global.getBitmapFromBase64(base64));
+            else
+                loadImageUsingPicasso(currentReport, holder);
+        } else {
+            loadImageUsingPicasso(currentReport, holder);
+        }
 
         holder.btnShowReport.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,13 +153,25 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
                     // Empty report_id => Register new report
                     Intent intent = new Intent(activity, ReportDialogFragment.class);
                     intent.putExtra("inform_id", inform_id);
+                    intent.putExtra("_id", currentReport.getRowId());
                     intent.putExtra("report_id", currentReport.getId());
+                    // the report has no id assigned, but it will be edited locally
+                    if (currentReport.getId() == 0)
+                        intent.putExtra("local_edit", true);
                     activity.startActivityForResult(intent, 1); // is just a dummy request code
                 } else {
                     Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú mismo has creado.");
                 }
             }
         });
+    }
+
+    private void loadImageUsingPicasso(Report report, ViewHolder holder) {
+        if (Global.isConnected(activity))
+            Picasso.with(activity).load(report.getImage()).into(holder.ivImage);
+        else
+            Picasso.with(activity).load(report.getImage())
+                    .networkPolicy(NetworkPolicy.OFFLINE).into(holder.ivImage);
     }
 
     @Override

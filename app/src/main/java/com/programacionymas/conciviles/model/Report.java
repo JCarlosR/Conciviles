@@ -2,7 +2,11 @@ package com.programacionymas.conciviles.model;
 
 import android.content.ContentValues;
 
+import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.io.sqlite.MyDbContract.ReportEntry;
+
+import rx.Observable;
 
 public class Report {
 
@@ -42,6 +46,21 @@ public class Report {
     private String area_name;
     private String responsible_name;
     private String critical_risks_name;
+
+    // the next IDs are not needed in the presentation (when the API is read)
+    // but it is important to publish new reports to the API
+    private int critical_risks_id;
+    private int work_front_id;
+    private int area_id;
+    private int responsible_id;
+    private int inform_id;
+    // base 64 images (only used for the offline storage)
+    private String image_base64;
+    private String image_action_base64;
+
+    // local updates are recognized based on this value
+    private boolean offline_edited;
+    private int _id;
 
     public int getId() {
         return id;
@@ -187,11 +206,15 @@ public class Report {
         this.state = state;
     }
 
-    public ContentValues getContentValues(final int inform_id) {
+    public ContentValues getContentValues() {
         ContentValues values = new ContentValues();
 
-        values.put(ReportEntry.COLUMN_ID, getId());
-        values.put(ReportEntry.COLUMN_INFORM_ID, inform_id); // it is not stored in the model
+        if (getId() == 0)
+            values.putNull(ReportEntry.COLUMN_ID);
+        else
+            values.put(ReportEntry.COLUMN_ID, getId());
+
+        values.put(ReportEntry.COLUMN_INFORM_ID, getInformId()); // it is not received from the API
 
         values.put(ReportEntry.COLUMN_USER_ID, getUserId());
         values.put(ReportEntry.COLUMN_ASPECT, getAspect());
@@ -209,9 +232,140 @@ public class Report {
         values.put(ReportEntry.COLUMN_CREATED_AT, getCreatedAt());
         values.put(ReportEntry.COLUMN_WORK_FRONT_NAME, getWorkFrontName());
         values.put(ReportEntry.COLUMN_AREA_NAME, getAreaName());
-        values.put(ReportEntry.COLUMN_RESPONSIBLE, getResponsibleName());
-        values.put(ReportEntry.COLUMN_CRIT_RISKS, getCriticalRisksName());
+        values.put(ReportEntry.COLUMN_RESPONSIBLE_NAME, getResponsibleName());
+        values.put(ReportEntry.COLUMN_CRIT_RISKS_NAME, getCriticalRisksName());
+
+        // IDs (used for the offline functionality)
+        values.put(ReportEntry.COLUMN_WORK_FRONT_ID, getWorkFrontId());
+        values.put(ReportEntry.COLUMN_AREA_ID, getAreaId());
+        values.put(ReportEntry.COLUMN_RESPONSIBLE_ID, getResponsibleId());
+        values.put(ReportEntry.COLUMN_CRIT_RISKS_ID, getCriticalRisksId());
+
+        if (wasOfflineEdited()) // this column is by default false
+            values.put(ReportEntry.COLUMN_OFFLINE_EDITED, true);
+
+        // offline image storage using base64 strings
+        if (getImage() == null || getImage().isEmpty())
+            values.put(ReportEntry.COLUMN_OFFLINE_IMG, getImageBase64());
+        if (getImageAction() == null || getImageAction().isEmpty())
+            values.put(ReportEntry.COLUMN_OFFLINE_IMG_ACTION, getImageActionBase64());
 
         return values;
+    }
+
+    public int getCriticalRisksId() {
+        return critical_risks_id;
+    }
+
+    public void setCriticalRisksId(int critical_risks_id) {
+        this.critical_risks_id = critical_risks_id;
+    }
+
+    public int getWorkFrontId() {
+        return work_front_id;
+    }
+
+    public void setWorkFrontId(int work_front_id) {
+        this.work_front_id = work_front_id;
+    }
+
+    public int getAreaId() {
+        return area_id;
+    }
+
+    public void setAreaId(int area_id) {
+        this.area_id = area_id;
+    }
+
+    public int getResponsibleId() {
+        return responsible_id;
+    }
+
+    public void setResponsibleId(int responsible_id) {
+        this.responsible_id = responsible_id;
+    }
+
+    public int getInformId() {
+        return inform_id;
+    }
+
+    public void setInformId(int inform_id) {
+        this.inform_id = inform_id;
+    }
+
+    public boolean wasOfflineEdited() {
+        return offline_edited;
+    }
+
+    public void setOfflineEdited(boolean offline_edited) {
+        this.offline_edited = offline_edited;
+    }
+
+    public String getImageBase64() {
+        return image_base64;
+    }
+
+    public void setImageBase64(String image_base64) {
+        this.image_base64 = image_base64;
+    }
+
+    public String getImageActionBase64() {
+        return image_action_base64;
+    }
+
+    public void setImageActionBase64(String image_action_base64) {
+        this.image_action_base64 = image_action_base64;
+    }
+
+    public Observable<NewReportResponse> postToServer() {
+        Observable<NewReportResponse> observable;
+
+        if ((image_base64 == null || image_base64.isEmpty()) && (image_action_base64 == null || image_action_base64.isEmpty())) {
+            observable = MyApiAdapter.getApiService().postNewReport(
+                    user_id, description, work_front_id, area_id, responsible_id,
+                    planned_date, deadline,
+                    state, actions, aspect, potential, String.valueOf(inspections),
+                    critical_risks_id, observations, inform_id
+            );
+        } else {
+            observable = MyApiAdapter.getApiService().postNewReportWithImages(
+                    user_id, description, image_base64, work_front_id, area_id, responsible_id,
+                    planned_date, deadline,
+                    state, actions, image_action_base64, aspect, potential, String.valueOf(inspections),
+                    critical_risks_id, observations, inform_id
+            );
+        }
+
+        return observable;
+    }
+
+    public Observable<NewReportResponse> updateInServer() {
+        Observable<NewReportResponse> observable;
+
+        if ((image_base64 == null || image_base64.isEmpty()) && (image_action_base64 == null || image_action_base64.isEmpty())) {
+            observable = MyApiAdapter.getApiService().updateNewReport(
+                    id, description, work_front_id, area_id, responsible_id,
+                    planned_date, deadline,
+                    state, actions, aspect, potential, String.valueOf(inspections),
+                    critical_risks_id, observations
+            );
+        } else {
+            observable = MyApiAdapter.getApiService().updateNewReportWithImages(
+                    id, description, image_base64, work_front_id, area_id, responsible_id,
+                    planned_date, deadline,
+                    state, actions, image_action_base64, aspect, potential, String.valueOf(inspections),
+                    critical_risks_id, observations
+            );
+        }
+
+        return observable;
+    }
+
+    public int getRowId() {
+        return _id;
+    }
+
+    public void setRowId(int _id) {
+        this._id = _id;
     }
 }

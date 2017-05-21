@@ -14,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.programacionymas.conciviles.Global;
@@ -55,7 +56,7 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         setupRecyclerView();
 
         if (inform_id > 0) {
-            reloadReportsByInform();
+            reloadReportsForThisInformFromSQLite();
         }
 
         final String title = "Informe " + inform_id;
@@ -152,13 +153,13 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         });
     }
 
-    public void reloadReportsByInform() {
+    public void reloadReportsForThisInformFromSQLite() {
         MyDbHelper myDbHelper = new MyDbHelper(this);
         ArrayList<Report> reports = myDbHelper.getReports(inform_id);
         if (reports.size() > 0)
             adapter.setReportsData(reports);
         else
-            Global.showMessageDialog(getApplicationContext(), "Error", "No se han podido obtener los reportes del informe seleccionado.");
+            Global.showMessageDialog(this, "Error", "No se han podido obtener los reportes del informe seleccionado.");
     }
 
     @Override
@@ -244,8 +245,36 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK) {
-            reloadReportsByInform();
+            if (Global.isConnected(this)) {
+                // get updated data from the API
+                // this method will update the UI when the data is ready
+                getReportsForThisInformFromApi();
+            } else {
+                // fetch data from SQLite instantly (because it was registered in db locally)
+                reloadReportsForThisInformFromSQLite();
+            }
         }
+    }
+
+    private void getReportsForThisInformFromApi() {
+        Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform_id);
+        call.enqueue(new Callback<ArrayList<Report>>() {
+            @Override
+            public void onResponse(Call<ArrayList<Report>> call, Response<ArrayList<Report>> response) {
+                if (response.isSuccessful()) {
+                    ArrayList<Report> reports = response.body();
+
+                    final MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+                    myHelper.updateReportsForInform(reports, inform_id);
+
+                    reloadReportsForThisInformFromSQLite();
+                }
+            }
+            @Override
+            public void onFailure(Call<ArrayList<Report>> call, Throwable t) {
+                Toast.makeText(ReportsActivity.this, "No se han podido actualizar los reportes del informe actual.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // Broadcast receiver
@@ -258,7 +287,7 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
 
             if (updated_inform_id == inform_id) {
                 // update the recyclerView only if the user is viewing the updated reports
-                reloadReportsByInform();
+                reloadReportsForThisInformFromSQLite();
             }
         }
     };

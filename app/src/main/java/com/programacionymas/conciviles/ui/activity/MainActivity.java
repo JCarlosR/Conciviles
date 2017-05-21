@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+import com.facebook.stetho.Stetho;
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
@@ -22,6 +23,9 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Used to debug SQLite dbs
+        Stetho.initializeWithDefaults(this);
 
         if (Global.getIntFromPreferences(this, "user_id") > 0)
             goToMenuActivity();

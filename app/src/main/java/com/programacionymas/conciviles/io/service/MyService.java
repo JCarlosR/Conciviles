@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.io.sqlite.MyDbContract;
 import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
 import com.programacionymas.conciviles.model.Inform;
@@ -22,6 +23,12 @@ import java.util.concurrent.TimeUnit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 
 public class MyService extends Service {
     public Runnable mRunnable = null;
@@ -106,7 +113,7 @@ public class MyService extends Service {
                     notifyInformsUiTobeUpdated();
 
                     // Continue downloading the reports
-                    downloadReportsByInform(informs);
+                    syncOfflineReportsAndAfterwardsDownload(informs);
 
                     // Save the time for the last download
                     long currentTime = new Date().getTime();
@@ -141,15 +148,76 @@ public class MyService extends Service {
         Log.d("MyService", "Broadcast to update report sent (inform_id = "+inform_id+")");
     }
 
+    private void syncOfflineReportsAndAfterwardsDownload(final ArrayList<Inform> informs) {
+        // TODO: create some logic to first pull and afterwards, push the local changes with confirmation dialogs
+        // AT LEAST FOR NOW: push the local changes and afterwards PULL all the reports
+
+        final MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+
+        // first sync uploading the new reports and the edited reports
+        ArrayList<Report> createdReports = myHelper.getOfflineCreatedReports();
+        ArrayList<Report> editedReports = myHelper.getOfflineEditedReports();
+
+        myHelper.close();
+
+        Toast.makeText(this, "Sincronizando reportes (" + createdReports.size() + " nuevos y " + editedReports.size() + " editados).", Toast.LENGTH_LONG).show();
+
+        // it is necessary to subscribeOn a different thread (Retrofit doesn't handle it for Observables)
+        Observable<NewReportResponse> createdReportsObs = Observable.from(createdReports) // .just() != .from()
+                .flatMap(new Func1<Report, Observable<NewReportResponse>>() {
+                    @Override
+                    public Observable<NewReportResponse> call(Report report) {
+                        return report.postToServer();
+                    }
+                });
+
+        Observable<NewReportResponse> editedReportsObs = Observable.from(editedReports)
+                .flatMap(new Func1<Report, Observable<NewReportResponse>>() {
+                    @Override
+                    public Observable<NewReportResponse> call(Report report) {
+                        return report.updateInServer();
+                    }
+                });
+
+        Observable.merge(createdReportsObs, editedReportsObs)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.newThread()) // no UI thread required
+                .subscribe(new Subscriber<NewReportResponse>() {
+                    @Override
+                    public void onCompleted() {
+                        downloadReportsByInform(informs);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        try {
+                            // TODO: I have to mark as uploaded to server, each posted report, to avoid duplication in a re-send logic
+                            Toast.makeText(MyService.this, "Ha ocurrido un error sincronizando los reportes. Volviendo a intentar ...", Toast.LENGTH_LONG).show();
+                            syncOfflineReportsAndAfterwardsDownload(informs);
+                        } catch (Throwable t) {
+                            Log.d("MyService", t.getLocalizedMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onNext(NewReportResponse o) {
+                        // nothing to do between completed requests
+                    }
+                });
+    }
+
     private void downloadReportsByInform(ArrayList<Inform> informs) {
+        final MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+
         for (final Inform inform : informs) {
+            // download the reports contained in each inform
             Call<ArrayList<Report>> call = MyApiAdapter.getApiService().getReportsByInform(inform.getId());
             call.enqueue(new Callback<ArrayList<Report>>() {
                 @Override
                 public void onResponse(Call<ArrayList<Report>> call, Response<ArrayList<Report>> response) {
                     if (response.isSuccessful()) {
                         ArrayList<Report> reports = response.body();
-                        MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+
                         myHelper.updateReportsForInform(reports, inform.getId());
                         notifyReportsUiTobeUpdated(inform.getId());
                     }

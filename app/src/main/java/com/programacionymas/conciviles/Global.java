@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v7.app.AlertDialog;
@@ -25,7 +26,7 @@ public class Global {
         return (n<=9) ? ("0"+n) : String.valueOf(n);
     }
 
-    public static Bitmap /*byte[]*/ getThumbnailFromBitmap(Bitmap bitmap) {
+    public static Bitmap getThumbnailFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         double height = bitmap.getHeight();
@@ -36,9 +37,7 @@ public class Global {
             divisor += 0.5;
         }
 
-        /*Bitmap thumbnailBitmap =*/ return Bitmap.createScaledBitmap(bitmap, (int) (width/divisor), (int) (height/divisor), false);
-        // thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 60, stream);
-        // return stream.toByteArray();
+        return Bitmap.createScaledBitmap(bitmap, (int) (width/divisor), (int) (height/divisor), false);
     }
 
     public static String getBase64FromBitmap(Bitmap bitmap) {
@@ -47,6 +46,12 @@ public class Global {
         byte[] byteFormat = stream.toByteArray();
         // Get the base 64 string
         return Base64.encodeToString(byteFormat, Base64.NO_WRAP);
+    }
+
+    public static Bitmap getBitmapFromBase64(String base64) {
+        byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+        // imageView.setImageBitmap(decodedByte);
     }
 
     public static void setSpinnerSelectedOption(Spinner spinner, String option)

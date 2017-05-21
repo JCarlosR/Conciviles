@@ -114,6 +114,8 @@ public class InformActivity extends AppCompatActivity implements View.OnClickLis
         final String fromDate = etStartDate.getText().toString().trim();
         final String toDate = etEndDate.getText().toString().trim();
 
+        startStoringState();
+
         Call<NewInformResponse> call = MyApiAdapter.getApiService().postNewInform(user_id, fromDate, toDate);
         call.enqueue(new Callback<NewInformResponse>() {
             @Override
@@ -141,7 +143,6 @@ public class InformActivity extends AppCompatActivity implements View.OnClickLis
             }
         });
 
-        progressBar.setVisibility(View.VISIBLE);
     }
 
     private boolean validateEditText(EditText editText, TextInputLayout textInputLayout, int errorString) {
@@ -165,6 +166,13 @@ public class InformActivity extends AppCompatActivity implements View.OnClickLis
             }
         });
         newFragment.show(getSupportFragmentManager(), "datePicker");
+    }
+
+    private void startStoringState() {
+        storing = true;
+        invalidateOptionsMenu();
+
+        progressBar.setVisibility(View.VISIBLE);
     }
 
     private void stopStoringState() {

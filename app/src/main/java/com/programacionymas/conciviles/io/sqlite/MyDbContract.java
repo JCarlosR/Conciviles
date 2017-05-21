@@ -46,7 +46,16 @@ public final class MyDbContract {
         public static final String COLUMN_CREATED_AT = "created_at";
         public static final String COLUMN_WORK_FRONT_NAME = "work_front_name";
         public static final String COLUMN_AREA_NAME = "area_name";
-        public static final String COLUMN_RESPONSIBLE = "responsible_name";
-        public static final String COLUMN_CRIT_RISKS = "critical_risks_name";
+        public static final String COLUMN_RESPONSIBLE_NAME = "responsible_name";
+        public static final String COLUMN_CRIT_RISKS_NAME = "critical_risks_name";
+
+        public static final String COLUMN_OFFLINE_EDITED = "offline_edited";
+        public static final String COLUMN_OFFLINE_IMG = "offline_image"; // base64
+        public static final String COLUMN_OFFLINE_IMG_ACTION = "offline_image_action"; // base64
+
+        public static final String COLUMN_WORK_FRONT_ID = "work_front_id";
+        public static final String COLUMN_AREA_ID = "area_id";
+        public static final String COLUMN_RESPONSIBLE_ID = "responsible_id";
+        public static final String COLUMN_CRIT_RISKS_ID = "critical_risks_id";
     }
 }

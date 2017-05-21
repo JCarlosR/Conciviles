@@ -2,12 +2,10 @@ package com.programacionymas.conciviles.ui.fragment;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -44,7 +42,6 @@ import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.response.NewReportResponse;
-import com.programacionymas.conciviles.io.sqlite.MyDbContract;
 import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
 import com.programacionymas.conciviles.model.Area;
 import com.programacionymas.conciviles.model.CriticalRisk;
@@ -59,13 +56,20 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class ReportDialogFragment extends AppCompatActivity implements View.OnClickListener {
+
+    private static final String TAG = "ReportDialogFragment";
 
     private EditText etDescription, etActions, etInspections, etObservations;
     private EditText etPlannedDate, etDeadline;
 
     private TextInputLayout tilDescription, tilActions, tilInspections, tilObservations;
+    private TextInputLayout tilPlannedDate, tilDeadline;
 
     private ImageButton btnTakeImage, btnTakeImageAction;
     private Spinner spinnerWorkFront, spinnerArea, spinnerResponsible, spinnerCriticalRisk;
@@ -79,6 +83,10 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
     private int report_id;
     // Inform container
     private int inform_id;
+    // even for report_id = 0, it can be a local edit operation
+    private boolean is_new;
+    // Row id (used for edit in offline mode)
+    private int _id;
 
     // Spinner options
     private ArrayList<WorkFront> workFronts;
@@ -102,6 +110,8 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
     // Images stored as base64
     private String image, imageAction;
+    // Possible image paths loaded
+    private String imagePath, imageActionPath;
 
     // Already storing the report (request)
     private boolean storing;
@@ -118,9 +128,13 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         Intent intent = getIntent();
         inform_id = intent.getIntExtra("inform_id", 0);
         report_id = intent.getIntExtra("report_id", 0);
+        _id = intent.getIntExtra("_id", 0);
+        boolean local_edit = intent.getBooleanExtra("local_edit", false);
+
+        is_new = (report_id == 0 && !local_edit);
 
         String title;
-        if (report_id == 0)
+        if (is_new)
             title = "Nuevo reporte";
         else {
             title = "Editar reporte";
@@ -145,7 +159,9 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
         tilDescription = (TextInputLayout) findViewById(R.id.tilDescription);
         tilInspections = (TextInputLayout) findViewById(R.id.tilInspections);
-        // tilObservations = (TextInputLayout) findViewById(R.id.tilObservations);
+
+        tilPlannedDate = (TextInputLayout) findViewById(R.id.tilPlannedDate);
+        tilDeadline = (TextInputLayout) findViewById(R.id.tilDeadline);
 
         etDescription = (EditText) findViewById(R.id.etDescription);
         etActions = (EditText) findViewById(R.id.etActions);
@@ -177,10 +193,6 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         // load spinner data
         fetchSpinnerDataFromPreferences();
 
-        // load report data
-        if (report_id > 0)
-            fetchReportDataFromServer(report_id);
-
         // buttons to capture photos or pick images from gallery
         btnTakeImage = (ImageButton) findViewById(R.id.btnTakeImage);
         btnTakeImage.setOnClickListener(this);
@@ -194,6 +206,22 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         // nested scroll view and progress bar
         nestedScrollView = (NestedScrollView) findViewById(R.id.nestedScrollView);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
+
+        // load report data
+        if (!is_new) {
+            // !is_new == edit mode
+            if (Global.isConnected(this))
+                fetchReportDataFromServer(report_id);
+            else
+                readReportDataFromSQLite();
+        }
+    }
+
+    private void readReportDataFromSQLite() {
+        final MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+        Report report = myHelper.getReportByRowId(_id);
+        myHelper.close();
+        setInitialDataToForm(report);
     }
 
     private void fetchReportDataFromServer(final int report_id) {
@@ -204,31 +232,57 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
                 if (response.isSuccessful()) {
                     Report report = response.body();
 
-                    Global.setSpinnerSelectedOption(spinnerWorkFront, report.getWorkFrontName());
-                    Global.setSpinnerSelectedOption(spinnerArea, report.getAreaName());
-                    Global.setSpinnerSelectedOption(spinnerResponsible, report.getResponsibleName());
-                    Global.setSpinnerSelectedOption(spinnerAspect, report.getAspect());
-                    Global.setSpinnerSelectedOption(spinnerCriticalRisk, report.getCriticalRisksName());
-                    Global.setSpinnerSelectedOption(spinnerPotential, report.getPotential());
-                    Global.setSpinnerSelectedOption(spinnerState, report.getState());
-
-                    Picasso.with(getApplicationContext()).load(report.getImage()).into(ivImage);
-                    Picasso.with(getApplicationContext()).load(report.getImageAction()).into(ivImageAction);
-
-                    etPlannedDate.setText(report.getPlannedDate());
-                    etDeadline.setText(report.getDeadline());
-                    etInspections.setText(String.valueOf(report.getInspections()));
-                    etDescription.setText(report.getDescription());
-                    etActions.setText(report.getActions());
-                    etObservations.setText(report.getObservations());
+                    setInitialDataToForm(report);
                 }
             }
 
             @Override
             public void onFailure(Call<Report> call, Throwable t) {
-
             }
         });
+    }
+
+    private void setInitialDataToForm(final Report report) {
+        Global.setSpinnerSelectedOption(spinnerWorkFront, report.getWorkFrontName());
+        Global.setSpinnerSelectedOption(spinnerArea, report.getAreaName());
+        Global.setSpinnerSelectedOption(spinnerResponsible, report.getResponsibleName());
+        Global.setSpinnerSelectedOption(spinnerAspect, report.getAspect());
+        Global.setSpinnerSelectedOption(spinnerCriticalRisk, report.getCriticalRisksName());
+        Global.setSpinnerSelectedOption(spinnerPotential, report.getPotential());
+        Global.setSpinnerSelectedOption(spinnerState, report.getState());
+
+        // to preserve the URLs
+        imagePath = report.getImage();
+        imageActionPath = report.getImageAction();
+
+        // to preserver the probably captured offline
+        image = report.getImageBase64();
+        imageAction = report.getImageActionBase64();
+
+        String base64;
+        if (report.getImage() == null ||report.getImage().isEmpty()) {
+            base64 = report.getImageBase64();
+            if (base64 != null && !base64.isEmpty())
+                ivImage.setImageBitmap(Global.getBitmapFromBase64(base64));
+        } else {
+            Picasso.with(getApplicationContext()).load(report.getImage()).into(ivImage);
+        }
+
+        if (report.getImage() == null ||report.getImage().isEmpty()) {
+            base64 = report.getImageActionBase64();
+            if (base64 != null && !base64.isEmpty())
+                ivImageAction.setImageBitmap(Global.getBitmapFromBase64(base64));
+        } else{
+            Picasso.with(getApplicationContext()).load(report.getImageAction()).into(ivImageAction);
+        }
+
+
+        etPlannedDate.setText(report.getPlannedDate());
+        etDeadline.setText(report.getDeadline());
+        etInspections.setText(String.valueOf(report.getInspections()));
+        etDescription.setText(report.getDescription());
+        etActions.setText(report.getActions());
+        etObservations.setText(report.getObservations());
     }
 
     @SuppressWarnings("unchecked")
@@ -404,6 +458,13 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
             return;
         }
 
+        if (! validateEditText(etPlannedDate, tilPlannedDate, R.string.error_planned_date)) {
+            return;
+        }
+        if (! validateEditText(etDeadline, tilDeadline, R.string.error_deadline)) {
+            return;
+        }
+
         // Log.d("ReportDialogFragment", "Validations passed");
 
         // get edit text values
@@ -420,16 +481,20 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         // get spinner values
 
         final int workFrontIndex = Global.getSpinnerSelectedIndex(spinnerWorkFront);
-        final int workFront = workFronts.get(workFrontIndex).getId();
+        final WorkFront workFront = workFronts.get(workFrontIndex);
+        final int workFrontId = workFront.getId();
 
         final int areaIndex = Global.getSpinnerSelectedIndex(spinnerArea);
-        final int area = areas.get(areaIndex).getId();
+        final Area area = areas.get(areaIndex);
+        final int areaId = area.getId();
 
         final int responsibleIndex = Global.getSpinnerSelectedIndex(spinnerResponsible);
-        final int responsible = responsibleUsers.get(responsibleIndex).getId();
+        final User responsible = responsibleUsers.get(responsibleIndex);
+        final int responsibleId = responsible.getId();
 
         final int criticalRiskIndex = Global.getSpinnerSelectedIndex(spinnerCriticalRisk);
-        final int criticalRisk= criticalRisks.get(criticalRiskIndex).getId();
+        final CriticalRisk criticalRisk = criticalRisks.get(criticalRiskIndex);
+        final int criticalRiskId = criticalRisk.getId();
 
         final String state = spinnerState.getSelectedItem().toString();
         final String aspect = spinnerAspect.getSelectedItem().toString();
@@ -439,96 +504,145 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
         startStoringState();
 
+        Report report = new Report();
+        report.setRowId(_id);
+        report.setUserId(user_id);
+        report.setDescription(description);
+        report.setWorkFrontId(workFrontId);
+        report.setAreaId(areaId);
+        report.setResponsibleId(responsibleId);
+        report.setPlannedDate(planned_date);
+        report.setDeadline(deadline);
+        report.setState(state);
+        report.setActions(actions);
+        report.setAspect(aspect);
+        report.setPotential(potential);
+        report.setInspections(Integer.parseInt(inspections));
+        report.setCriticalRisksId(criticalRiskId);
+        report.setObservations(observations);
+
+        // offline values required to set
+        report.setInformId(inform_id);
+
+        if (image!=null && !image.isEmpty())
+            report.setImageBase64(image);
+        else
+            report.setImage(imagePath);
+
+        if (imageAction!=null && !imageAction.isEmpty())
+            report.setImageActionBase64(imageAction);
+        else
+            report.setImageAction(imageActionPath);
+
+        report.setWorkFrontName(workFront.getName());
+        report.setAreaName(area.getName());
+        
+
+        // Check the internet connection
+        // If there is no internet connection, save the changes locally
+        if (! Global.isConnected(this)) {
+
+            MyDbHelper myHelper = new MyDbHelper(this);
+
+            // If the report ID is ZERO, create a new record
+            if (is_new) {
+                // Insert a new record locally
+                report.setId(0); // we have to store as NULL in the SQLite db (because UNIQUE column allows multiple NULL values)
+
+                myHelper.insertReport(report);
+                Log.d(TAG, "New report was inserted in the db (offline mode).");
+            } else {
+                // Update the changes locally for the edited report
+                report.setId(report_id); // report that will be updated in the local db
+                report.setOfflineEdited(true);
+
+                myHelper.updateReport(report);
+                Log.d(TAG, "The selected report was updated in the db (offline mode).");
+            }
+            myHelper.close();
+
+            setResult(RESULT_OK);
+            finish();
+            return; // stop the online store
+        }
+
+        // When the internet connection is established
         // If the report ID is ZERO, create a new record
-        if (report_id == 0) {
-            // Log.d("ReportDialogFragment", "Going to post a new report");
+        if (is_new) {
 
+            // Request to post/store a new report
 
-            Call<NewReportResponse> call;
+            Observable<NewReportResponse> observable = report.postToServer();
 
-            if ((image == null || image.isEmpty()) && (imageAction == null || imageAction.isEmpty())) {
-                call = MyApiAdapter.getApiService().postNewReport(
-                        user_id, description, workFront, area, responsible,
-                        planned_date, deadline,
-                        state, actions, aspect, potential, inspections,
-                        criticalRisk, observations, inform_id
-                );
+            observable.subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Subscriber<NewReportResponse>() {
 
-            } else {
-                call = MyApiAdapter.getApiService().postNewReportWithImages(
-                        user_id, description, image, workFront, area, responsible,
-                        planned_date, deadline,
-                        state, actions, imageAction, aspect, potential, inspections,
-                        criticalRisk, observations, inform_id
-                );
-
-            }
-
-            call.enqueue(new Callback<NewReportResponse>() {
-                @Override
-                public void onResponse(Call<NewReportResponse> call, Response<NewReportResponse> response) {
-                    if (response.isSuccessful()) {
-                        NewReportResponse newReportResponse = response.body();
-                        if (newReportResponse.isSuccess()) {
-                            Toast.makeText(getApplicationContext(), "El reporte se ha registrado satisfactoriamente.", Toast.LENGTH_SHORT).show();
-                            setResult(RESULT_OK);
-                            finish();
-                        } else {
-                            stopStoringState();
-                            Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                        @Override
+                        public void onNext(NewReportResponse newReportResponse) {
+                            // just one item
+                            if (newReportResponse.isSuccess()) {
+                                Toast.makeText(getApplicationContext(), "El reporte se ha registrado satisfactoriamente.", Toast.LENGTH_SHORT).show();
+                                setResult(RESULT_OK);
+                                finish();
+                            } else {
+                                stopStoringState();
+                                Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                }
 
-                @Override
-                public void onFailure(Call<NewReportResponse> call, Throwable t) {
-                    stopStoringState();
-                    Toast.makeText(getApplicationContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else { // edit the selected report
-            Call<NewReportResponse> call;
-
-            if ((image == null || image.isEmpty()) && (imageAction == null || imageAction.isEmpty())) {
-                call = MyApiAdapter.getApiService().updateNewReport(
-                        report_id, description, workFront, area, responsible,
-                        planned_date, deadline,
-                        state, actions, aspect, potential, inspections,
-                        criticalRisk, observations
-                );
-
-            } else {
-                call = MyApiAdapter.getApiService().updateNewReportWithImages(
-                        report_id, description, image, workFront, area, responsible,
-                        planned_date, deadline,
-                        state, actions, imageAction, aspect, potential, inspections,
-                        criticalRisk, observations
-                );
-
-            }
-
-            call.enqueue(new Callback<NewReportResponse>() {
-                @Override
-                public void onResponse(Call<NewReportResponse> call, Response<NewReportResponse> response) {
-                    if (response.isSuccessful()) {
-                        NewReportResponse newReportResponse = response.body();
-                        if (newReportResponse.isSuccess()) {
-                            Toast.makeText(getApplicationContext(), "El reporte se ha modificado correctamente.", Toast.LENGTH_SHORT).show();
-                            setResult(RESULT_OK);
-                            finish();
-                        } else {
-                            stopStoringState();
-                            Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                        @Override
+                        public void onCompleted() {
+                            // Log.d(TAG, "onCompleted" );
+                            // caution: finish is called in onNext, be careful with memory leaks at this point
                         }
-                    }
-                }
 
-                @Override
-                public void onFailure(Call<NewReportResponse> call, Throwable t) {
-                    stopStoringState();
-                    Toast.makeText(getApplicationContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+                        @Override
+                        public void onError(Throwable t) {
+                            Log.d(TAG, "onError Throwable: " + t.toString());
+                            // if (t instanceof HttpException) {
+                            stopStoringState();
+                            Toast.makeText(getApplicationContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+        } else {
+
+            // Request to edit the selected report
+            report.setId(report_id);
+            Observable<NewReportResponse> observable = report.updateInServer();
+
+            observable.subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Subscriber<NewReportResponse>() {
+
+                        @Override
+                        public void onNext(NewReportResponse newReportResponse) {
+                            // just one item
+                            if (newReportResponse.isSuccess()) {
+                                Toast.makeText(getApplicationContext(), "El reporte se ha modificado correctamente.", Toast.LENGTH_SHORT).show();
+                                setResult(RESULT_OK);
+                                finish();
+                            } else {
+                                stopStoringState();
+                                Toast.makeText(getApplicationContext(), newReportResponse.getFirstError(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onCompleted() {
+                            // Log.d(TAG, "onCompleted" );
+                            // caution: finish is called in onNext, be careful with memory leaks at this point
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            Log.d(TAG, "onError Throwable: " + t.toString());
+                            // if (t instanceof HttpException) {
+                            stopStoringState();
+                            Toast.makeText(getApplicationContext(), t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
         }
     }
 
@@ -553,20 +667,20 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
 
                     // check for permission for newer APIs
                     if (Build.VERSION.SDK_INT >= 23) {
-                        Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is TRUE");
+                        // Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is TRUE");
                         if (checkSelfPermission(Manifest.permission.CAMERA)
                                 == PackageManager.PERMISSION_GRANTED) {
                             // permission granted
-                            Log.d("ReportDialogFragment", "Camera permission already granted");
+                            // Log.d("ReportDialogFragment", "Camera permission already granted");
                             startCameraIntent();
                         } else {
-                            Log.d("ReportDialogFragment", "Request camera permission fired");
+                            // Log.d("ReportDialogFragment", "Request camera permission fired");
                             // request camera permission
                             requestPermissions(new String[]{Manifest.permission.CAMERA},
                                     REQUEST_CAMERA_PERMISSION);
                         }
                     } else {
-                        Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is FALSE");
+                        // Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is FALSE");
                         // old APIs doesn't require to check for camera permission
                         startCameraIntent();
                     }

@@ -147,7 +147,7 @@ public class MenuActivity extends AppCompatActivity
         } else if (id == R.id.nav_informs) {
             fragment = new InformsFragment();
         } else if (id == R.id.nav_sync) {
-
+            Toast.makeText(this, "La sincronización es automática al ingresar a la app siempre que haya conexión a internet :)", Toast.LENGTH_LONG).show();
         } else if (id == R.id.nav_send) {
 
         }

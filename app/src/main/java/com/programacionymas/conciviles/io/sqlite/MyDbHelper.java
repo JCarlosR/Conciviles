@@ -15,7 +15,7 @@ import com.programacionymas.conciviles.model.Report;
 import java.util.ArrayList;
 
 public class MyDbHelper extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 8;
     private static final String DATABASE_NAME = "pym.db";
 
     public MyDbHelper(Context context) {
@@ -35,20 +35,24 @@ public class MyDbHelper extends SQLiteOpenHelper {
                 InformEntry.COLUMN_TO_DATE + " TEXT," +
                 InformEntry.COLUMN_CREATED_AT + " TEXT," +
                 InformEntry.COLUMN_USER_NAME + " TEXT," +
-                InformEntry.COLUMN_IS_EDITABLE + " INTEGER)");
+                InformEntry.COLUMN_IS_EDITABLE + " INTEGER)"); // The children reports are editable for the authenticated user
+        // If this user is logged out, and reconnects with internet connection, all the info is fetched again
+        // But if the new authenticated user looses the connection immediately, probably it will be inconsistent
 
         db.execSQL("CREATE TABLE " + ReportEntry.TABLE_NAME + " (" +
                 ReportEntry._ID + " INTEGER PRIMARY KEY," +
 
-                ReportEntry.COLUMN_ID + " INTEGER UNIQUE," +
+                ReportEntry.COLUMN_ID + " INTEGER UNIQUE," + // "UNIQUE" ALLOWS MULTIPLE NULL VALUES
                 ReportEntry.COLUMN_INFORM_ID + " INTEGER NOT NULL," +
 
                 ReportEntry.COLUMN_USER_ID + " INTEGER," +
                 ReportEntry.COLUMN_ASPECT+ " TEXT," +
                 ReportEntry.COLUMN_POTENTIAL + " TEXT," +
                 ReportEntry.COLUMN_STATE + " TEXT," +
-                ReportEntry.COLUMN_IMG + " TEXT," +
-                ReportEntry.COLUMN_IMG_ACTION + " TEXT," +
+                ReportEntry.COLUMN_IMG + " TEXT," + // image path url
+                ReportEntry.COLUMN_IMG_ACTION + " TEXT," + // image path url
+                ReportEntry.COLUMN_OFFLINE_IMG + " TEXT," + // base64 string
+                ReportEntry.COLUMN_OFFLINE_IMG_ACTION + " TEXT," + // base64 string
                 ReportEntry.COLUMN_PLANNED_DATE + " TEXT," +
                 ReportEntry.COLUMN_DEADLINE + " TEXT," +
                 ReportEntry.COLUMN_INSPECTIONS + " INTEGER," +
@@ -59,8 +63,14 @@ public class MyDbHelper extends SQLiteOpenHelper {
                 ReportEntry.COLUMN_CREATED_AT + " TEXT," +
                 ReportEntry.COLUMN_WORK_FRONT_NAME + " TEXT," +
                 ReportEntry.COLUMN_AREA_NAME + " TEXT," +
-                ReportEntry.COLUMN_RESPONSIBLE + " TEXT," +
-                ReportEntry.COLUMN_CRIT_RISKS + " TEXT)");
+                ReportEntry.COLUMN_RESPONSIBLE_NAME + " TEXT," +
+                ReportEntry.COLUMN_CRIT_RISKS_NAME + " TEXT," +
+
+                ReportEntry.COLUMN_WORK_FRONT_ID + " TEXT," +
+                ReportEntry.COLUMN_AREA_ID + " TEXT," +
+                ReportEntry.COLUMN_RESPONSIBLE_ID + " TEXT," +
+                ReportEntry.COLUMN_CRIT_RISKS_ID + " TEXT," +
+                ReportEntry.COLUMN_OFFLINE_EDITED + " INTEGER DEFAULT 0)");
     }
 
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -194,31 +204,108 @@ public class MyDbHelper extends SQLiteOpenHelper {
     public void updateReportsForInform(ArrayList<Report> reports, final int inform_id) {
         SQLiteDatabase db = getWritableDatabase();
 
+        // TODO: Based on the created_at value, first pull the new reports, and afterwards push the local changes
+
         // discard reports associated with the inform_id
         db.delete(ReportEntry.TABLE_NAME, ReportEntry.COLUMN_INFORM_ID + "=" + inform_id, null);
 
         for (Report report : reports) {
-            db.insert(ReportEntry.TABLE_NAME, null, report.getContentValues(inform_id));
+            report.setInformId(inform_id);
+            db.insert(ReportEntry.TABLE_NAME, null, report.getContentValues());
         }
         db.close();
     }
 
-    public ArrayList<Report> getReports(final int inform_id) {
-        ArrayList<Report> reports = new ArrayList<>();
+    public void insertReport(Report report) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.insert(ReportEntry.TABLE_NAME, null, report.getContentValues());
+        db.close();
+    }
 
+    public void updateReport(Report report) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        String[] whereArgs = new String[1];
+        whereArgs[0] = String.valueOf(report.getRowId());
+
+        db.update(ReportEntry.TABLE_NAME, report.getContentValues(), "_id=?", whereArgs);
+        db.close();
+    }
+
+    public ArrayList<Report> getReports(final int inform_id) {
         // select all
-        String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME + " WHERE inform_id = " + inform_id;
+        String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME
+                + " WHERE " + ReportEntry.COLUMN_INFORM_ID + " = " + inform_id
+                + " ORDER BY " + ReportEntry.COLUMN_STATE;
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
-        // looping through all rows and adding to list
+        return getReportsFromCursor(cursor);
+    }
+
+    public Report getReportByRowId(final int _id) {
+        // select one report by id
+        String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME
+                + " WHERE " + ReportEntry._ID + " = " + _id;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        return getReportFromCursor(cursor);
+    }
+
+    public ArrayList<Report> getOfflineCreatedReports() {
+        // select all
+        String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME + " WHERE " + ReportEntry.COLUMN_ID + " is NULL";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        return getReportsFromCursor(cursor);
+    }
+
+    public ArrayList<Report> getOfflineEditedReports() {
+        // select all
+        String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME
+                + " WHERE " + ReportEntry.COLUMN_OFFLINE_EDITED + " = 1 AND " + ReportEntry.COLUMN_ID + " is NOT NULL";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        return getReportsFromCursor(cursor);
+    }
+
+    private Report getReportFromCursor(Cursor cursor) {
+        ArrayList<Report> reports = getReportsFromCursor(cursor);
+
+        if (reports.size() > 0)
+            return reports.get(0);
+
+        return null;
+    }
+
+    private ArrayList<Report> getReportsFromCursor(Cursor cursor) {
+        ArrayList<Report> reports = new ArrayList<>();
+
         if (cursor != null) {
             if (cursor.moveToFirst()) {
+                // looping through all rows and adding to list
                 do {
                     Report report = new Report();
 
-                    int columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_ID);
+                    int columnIndex = cursor.getColumnIndex(ReportEntry._ID);
+                    if (columnIndex > -1) {
+                        int id;
+                        try {
+                            id = Integer.parseInt(cursor.getString(columnIndex));
+                        } catch (NumberFormatException nfe) {
+                            id = 0;
+                        }
+                        report.setRowId(id);
+                    }
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_ID);
                     if (columnIndex > -1) {
                         int id;
                         try {
@@ -237,7 +324,7 @@ public class MyDbHelper extends SQLiteOpenHelper {
                         } catch (NumberFormatException nfe) {
                             informId = 0;
                         }
-                        report.setUserId(informId);
+                        report.setInformId(informId);
                     }
 
                     columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_USER_ID);
@@ -340,16 +427,60 @@ public class MyDbHelper extends SQLiteOpenHelper {
                         report.setAreaName(value);
                     }
 
-                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_RESPONSIBLE);
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_RESPONSIBLE_NAME);
                     if (columnIndex > -1) {
                         String value = cursor.getString(columnIndex);
                         report.setResponsibleName(value);
                     }
 
-                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_CRIT_RISKS);
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_CRIT_RISKS_NAME);
                     if (columnIndex > -1) {
                         String value = cursor.getString(columnIndex);
                         report.setCriticalRisksName(value);
+                    }
+
+                    // offline mode values =>
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_OFFLINE_EDITED);
+                    if (columnIndex > -1) {
+                        String value = cursor.getString(columnIndex);
+                        report.setOfflineEdited(value.equals("1"));
+                    }
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_OFFLINE_IMG);
+                    if (columnIndex > -1) {
+                        String value = cursor.getString(columnIndex);
+                        report.setImageBase64(value);
+                    }
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_OFFLINE_IMG_ACTION);
+                    if (columnIndex > -1) {
+                        String value = cursor.getString(columnIndex);
+                        report.setImageActionBase64(value);
+                    }
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_WORK_FRONT_ID);
+                    if (columnIndex > -1) {
+                        int value = cursor.getInt(columnIndex);
+                        report.setWorkFrontId(value);
+                    }
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_AREA_ID);
+                    if (columnIndex > -1) {
+                        int value = cursor.getInt(columnIndex);
+                        report.setAreaId(value);
+                    }
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_RESPONSIBLE_ID);
+                    if (columnIndex > -1) {
+                        int value = cursor.getInt(columnIndex);
+                        report.setResponsibleId(value);
+                    }
+
+                    columnIndex = cursor.getColumnIndex(ReportEntry.COLUMN_CRIT_RISKS_ID);
+                    if (columnIndex > -1) {
+                        int value = cursor.getInt(columnIndex);
+                        report.setCriticalRisksId(value);
                     }
 
                     // adding report to list
@@ -359,7 +490,7 @@ public class MyDbHelper extends SQLiteOpenHelper {
             cursor.close();
         }
 
-        // return list
         return reports;
     }
+
 }

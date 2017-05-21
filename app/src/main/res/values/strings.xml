@@ -38,6 +38,9 @@
     <string name="error_description">Es necesario ingresar una descripción</string>
     <string name="error_inspections">Es necesario ingresar un nro de inspecciones</string>
 
+    <string name="error_planned_date">Es necesario ingresar una fecha de planificación</string>
+    <string name="error_deadline">Es necesario ingresar una fecha de finalización</string>
+
     <string name="error_inform_start">Es necesario ingresar una fecha de inicio</string>
     <string name="error_inform_end">Es necesario ingresar una fecha de cierre</string>
 
