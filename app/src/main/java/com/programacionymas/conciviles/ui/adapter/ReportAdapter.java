@@ -2,11 +2,7 @@ package com.programacionymas.conciviles.ui.adapter;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +15,8 @@ import com.google.gson.Gson;
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
-import com.programacionymas.conciviles.ui.activity.ReportActivity;
-import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
+import com.programacionymas.conciviles.ui.activity.ShowReportActivity;
+import com.programacionymas.conciviles.ui.activity.ReportFormActivity;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
@@ -136,7 +132,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         holder.btnShowReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(activity, ReportActivity.class);
+                Intent intent = new Intent(activity, ShowReportActivity.class);
                 intent.putExtra("report", new Gson().toJson(currentReport));
                 intent.putExtra("inform_id", inform_id);
                 activity.startActivity(intent);
@@ -145,25 +141,29 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
 
         final int authenticated_user_id = Global.getIntFromPreferences(activity, "user_id");
 
-        holder.btnEditReport.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (authenticated_user_id == currentReport.getUserId() || authenticated_user_id == author_inform_id) {
+        if ( authenticated_user_id == author_inform_id ||
+             authenticated_user_id == currentReport.getUserId() ||
+             authenticated_user_id == currentReport.getResponsibleId() ) {
 
-                    // Empty report_id => Register new report
-                    Intent intent = new Intent(activity, ReportDialogFragment.class);
-                    intent.putExtra("inform_id", inform_id);
-                    intent.putExtra("_id", currentReport.getRowId());
-                    intent.putExtra("report_id", currentReport.getId());
-                    // the report has no id assigned, but it will be edited locally
-                    if (currentReport.getId() == 0)
-                        intent.putExtra("local_edit", true);
-                    activity.startActivityForResult(intent, 1); // is just a dummy request code
-                } else {
-                    Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú mismo has creado.");
+            holder.btnEditReport.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                        // Empty report_id => Register new report
+                        Intent intent = new Intent(activity, ReportFormActivity.class);
+                        intent.putExtra("inform_id", inform_id);
+                        intent.putExtra("_id", currentReport.getRowId());
+                        intent.putExtra("report_id", currentReport.getId());
+                        // the report has no id assigned, but it will be edited locally
+                        if (currentReport.getId() == 0)
+                            intent.putExtra("local_edit", true);
+                        activity.startActivityForResult(intent, 1); // is just a dummy request code
                 }
-            }
-        });
+            });
+
+        } else {
+            holder.btnEditReport.setEnabled(false);
+            // Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú has creado o eres responsable.");
+        }
     }
 
     private void loadImageUsingPicasso(Report report, ViewHolder holder) {

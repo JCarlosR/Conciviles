@@ -1,4 +1,4 @@
-package com.programacionymas.conciviles.ui.fragment;
+package com.programacionymas.conciviles.ui.activity;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
@@ -48,6 +48,7 @@ import com.programacionymas.conciviles.model.CriticalRisk;
 import com.programacionymas.conciviles.model.Report;
 import com.programacionymas.conciviles.model.User;
 import com.programacionymas.conciviles.model.WorkFront;
+import com.programacionymas.conciviles.ui.fragment.DatePickerFragment;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class ReportDialogFragment extends AppCompatActivity implements View.OnClickListener {
+public class ReportFormActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "ReportDialogFragment";
 
@@ -461,14 +462,10 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         if (! validateEditText(etPlannedDate, tilPlannedDate, R.string.error_planned_date)) {
             return;
         }
-        if (! validateEditText(etDeadline, tilDeadline, R.string.error_deadline)) {
-            return;
-        }
 
         // Log.d("ReportDialogFragment", "Validations passed");
 
         // get edit text values
-
         final String description = etDescription.getText().toString().trim();
         final String actions = etActions.getText().toString().trim();
         final String inspections = etInspections.getText().toString().trim();
@@ -479,7 +476,6 @@ public class ReportDialogFragment extends AppCompatActivity implements View.OnCl
         final String deadline = etDeadline.getText().toString().trim();
 
         // get spinner values
-
         final int workFrontIndex = Global.getSpinnerSelectedIndex(spinnerWorkFront);
         final WorkFront workFront = workFronts.get(workFrontIndex);
         final int workFrontId = workFront.getId();

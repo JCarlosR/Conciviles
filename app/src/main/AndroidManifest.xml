@@ -33,9 +33,9 @@
         <activity
             android:name=".ui.activity.ReportsActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ui.activity.ReportActivity" />
+        <activity android:name=".ui.activity.ShowReportActivity" />
         <activity
-            android:name=".ui.fragment.ReportDialogFragment"
+            android:name=".ui.activity.ReportFormActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".ui.activity.InformActivity"></activity>
     </application>

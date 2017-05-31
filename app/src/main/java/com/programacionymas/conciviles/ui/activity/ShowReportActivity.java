@@ -14,10 +14,9 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
-import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
 import com.squareup.picasso.Picasso;
 
-public class ReportActivity extends AppCompatActivity {
+public class ShowReportActivity extends AppCompatActivity {
 
     private TextView tvDescription, tvAuthorAndCreatedAt,
             tvWorkFrontName, tvAreaName, tvResponsibleName,
@@ -113,7 +112,7 @@ public class ReportActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Empty report_id => Register new report
-                Intent intent = new Intent(getApplicationContext(), ReportDialogFragment.class);
+                Intent intent = new Intent(getApplicationContext(), ReportFormActivity.class);
                 intent.putExtra("inform_id", inform_id);
                 intent.putExtra("report_id", report.getId());
                 startActivityForResult(intent, 1); // is just a dummy request code

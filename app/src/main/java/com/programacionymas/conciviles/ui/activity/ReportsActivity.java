@@ -27,7 +27,6 @@ import com.programacionymas.conciviles.model.Report;
 import com.programacionymas.conciviles.model.User;
 import com.programacionymas.conciviles.model.WorkFront;
 import com.programacionymas.conciviles.ui.adapter.ReportAdapter;
-import com.programacionymas.conciviles.ui.fragment.ReportDialogFragment;
 
 import java.util.ArrayList;
 
@@ -190,8 +189,10 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         recyclerView.setAdapter(adapter);
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        final int user_id = Global.getIntFromPreferences(this, "user_id");
 
-        if (inform_editable) {
+        // only the on duty can add new reports to the inform (if it is active)
+        if (inform_editable && author_inform_id == user_id) {
             recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
             {
                 @Override
@@ -234,7 +235,7 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
     private void showDialogNewReport() {
 
         // Empty report_id => Register new report
-        Intent intent = new Intent(this, ReportDialogFragment.class);
+        Intent intent = new Intent(this, ReportFormActivity.class);
         intent.putExtra("inform_id", inform_id);
         intent.putExtra("report_id", 0);
         startActivityForResult(intent, 1); // 1 is the request code
