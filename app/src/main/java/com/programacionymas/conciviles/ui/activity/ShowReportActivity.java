@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.model.Report;
 import com.squareup.picasso.Picasso;
@@ -66,19 +67,6 @@ public class ShowReportActivity extends AppCompatActivity {
         ivImageAction = (ImageView) findViewById(R.id.ivImageAction);
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
-
-        NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nestedScrollView);
-        nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                if (scrollY > oldScrollY) {
-                    fab.hide();
-                } else {
-                    fab.show();
-                }
-            }
-        });
-
    }
 
     private void getReportDataFromExtras() {
@@ -108,16 +96,38 @@ public class ShowReportActivity extends AppCompatActivity {
         tvCriticalRisk.setText(report.getCriticalRisksName());
         tvObservations.setText(report.getObservations());
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Empty report_id => Register new report
-                Intent intent = new Intent(getApplicationContext(), ReportFormActivity.class);
-                intent.putExtra("inform_id", inform_id);
-                intent.putExtra("report_id", report.getId());
-                startActivityForResult(intent, 1); // is just a dummy request code
-            }
-        });
+        final int authenticated_user_id = Global.getIntFromPreferences(this, "user_id");
+
+        if (authenticated_user_id == inform_id ||
+                authenticated_user_id == report.getUserId() ||
+                authenticated_user_id == report.getResponsibleId()) {
+
+            NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nestedScrollView);
+            nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+                @Override
+                public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                    if (scrollY > oldScrollY) {
+                        fab.hide();
+                    } else {
+                        fab.show();
+                    }
+                }
+            });
+
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // Empty report_id => Register new report
+                    Intent intent = new Intent(getApplicationContext(), ReportFormActivity.class);
+                    intent.putExtra("inform_id", inform_id);
+                    intent.putExtra("report_id", report.getId());
+                    startActivityForResult(intent, 1); // is just a dummy request code
+                }
+            });
+
+        } else {
+            fab.setVisibility(View.GONE);
+        }
     }
 
     private void setReportIdInActionBar(final int report_id) {

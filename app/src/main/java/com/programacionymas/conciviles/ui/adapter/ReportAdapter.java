@@ -27,12 +27,13 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
     private Activity activity;
     private int inform_id;
     private int author_inform_id;
+    private boolean inform_editable;
 
     private ArrayList<Report> reports;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        LinearLayout llClosedReport;
+        LinearLayout llClosedReport, llButtons;
 
         TextView tvReportId, tvDescription, tvAuthorAndCreatedAt,
                 tvWorkFrontName, tvAreaName, tvResponsibleName,
@@ -55,6 +56,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             tvDeadline = (TextView) v.findViewById(R.id.tvDeadline);
 
             llClosedReport = (LinearLayout) v.findViewById(R.id.llClosedReport);
+            llButtons = (LinearLayout) v.findViewById(R.id.llButtons);
             tvOpenedReport = (TextView) v.findViewById(R.id.tvOpenedReport);
 
             ivImage = (ImageView) v.findViewById(R.id.ivImage);
@@ -64,12 +66,13 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
         }
     }
 
-    public ReportAdapter(Activity activity, final int inform_id, final int author_inform_id) {
+    public ReportAdapter(Activity activity, final int inform_id, final int author_inform_id, final boolean inform_editable) {
         this.activity = activity;
         this.reports = new ArrayList<>();
 
         this.inform_id = inform_id;
         this.author_inform_id = author_inform_id;
+        this.inform_editable = inform_editable;
     }
 
     public void setReportsData(ArrayList<Report> reports) {
@@ -129,25 +132,28 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             loadImageUsingPicasso(currentReport, holder);
         }
 
-        holder.btnShowReport.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(activity, ShowReportActivity.class);
-                intent.putExtra("report", new Gson().toJson(currentReport));
-                intent.putExtra("inform_id", inform_id);
-                activity.startActivity(intent);
-            }
-        });
+        if (inform_editable) {
+            holder.llButtons.setVisibility(View.VISIBLE);
 
-        final int authenticated_user_id = Global.getIntFromPreferences(activity, "user_id");
-
-        if ( authenticated_user_id == author_inform_id ||
-             authenticated_user_id == currentReport.getUserId() ||
-             authenticated_user_id == currentReport.getResponsibleId() ) {
-
-            holder.btnEditReport.setOnClickListener(new View.OnClickListener() {
+            holder.btnShowReport.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    Intent intent = new Intent(activity, ShowReportActivity.class);
+                    intent.putExtra("report", new Gson().toJson(currentReport));
+                    intent.putExtra("inform_id", inform_id);
+                    activity.startActivity(intent);
+                }
+            });
+
+            final int authenticated_user_id = Global.getIntFromPreferences(activity, "user_id");
+
+            if ( authenticated_user_id == author_inform_id ||
+                    authenticated_user_id == currentReport.getUserId() ||
+                    authenticated_user_id == currentReport.getResponsibleId() ) {
+
+                holder.btnEditReport.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
                         // Empty report_id => Register new report
                         Intent intent = new Intent(activity, ReportFormActivity.class);
                         intent.putExtra("inform_id", inform_id);
@@ -157,13 +163,15 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
                         if (currentReport.getId() == 0)
                             intent.putExtra("local_edit", true);
                         activity.startActivityForResult(intent, 1); // is just a dummy request code
-                }
-            });
-
-        } else {
-            holder.btnEditReport.setEnabled(false);
-            // Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú has creado o eres responsable.");
+                    }
+                });
+            } else {
+                holder.btnEditReport.setEnabled(false);
+                // Global.showMessageDialog(activity, "Alerta", "Solo puedes editar reportes que tú has creado o eres responsable.");
+            }
         }
+
+
     }
 
     private void loadImageUsingPicasso(Report report, ViewHolder holder) {

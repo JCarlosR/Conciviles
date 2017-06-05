@@ -185,7 +185,7 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        adapter = new ReportAdapter(this, inform_id, author_inform_id);
+        adapter = new ReportAdapter(this, inform_id, author_inform_id, inform_editable);
         recyclerView.setAdapter(adapter);
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
