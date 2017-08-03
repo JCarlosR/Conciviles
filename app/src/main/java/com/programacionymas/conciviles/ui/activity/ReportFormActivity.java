@@ -442,6 +442,7 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
         // Log.d("ReportDialogFragment", "Validating an EditText with this value => " + editText.getText().toString());
         if (editText.getText().toString().length() < 1) {
             textInputLayout.setError(getString(errorString));
+            editText.requestFocus();
             return false;
         } else {
             textInputLayout.setErrorEnabled(false);
@@ -462,8 +463,6 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
         if (! validateEditText(etPlannedDate, tilPlannedDate, R.string.error_planned_date)) {
             return;
         }
-
-        // Log.d("ReportDialogFragment", "Validations passed");
 
         // get edit text values
         final String description = etDescription.getText().toString().trim();
@@ -495,6 +494,14 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
         final String state = spinnerState.getSelectedItem().toString();
         final String aspect = spinnerAspect.getSelectedItem().toString();
         final String potential = spinnerPotential.getSelectedItem().toString();
+
+        // additional validations
+        if (state.equals("Cerrado") && deadline.isEmpty()) {
+            tilDeadline.setError(getString(R.string.error_deadline));
+            return;
+        } else {
+            tilDeadline.setErrorEnabled(false); // clear error
+        }
 
         final int user_id = Global.getIntFromPreferences(this, "user_id");
 
@@ -532,6 +539,7 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
 
         report.setWorkFrontName(workFront.getName());
         report.setAreaName(area.getName());
+        report.setResponsibleName(responsible.getName());
         
 
         // Check the internet connection
