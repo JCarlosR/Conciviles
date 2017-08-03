@@ -27,6 +27,7 @@
                 android:inputType="none"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="@string/full_name" />
         </android.support.design.widget.TextInputLayout>
 
@@ -39,6 +40,7 @@
                 android:inputType="none|textEmailAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="@string/email" />
 
         </android.support.design.widget.TextInputLayout>
@@ -52,6 +54,7 @@
                 android:inputType="none"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="@string/rol" />
         </android.support.design.widget.TextInputLayout>
 
@@ -64,6 +67,7 @@
                 android:inputType="none"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="@string/department" />
         </android.support.design.widget.TextInputLayout>
 
@@ -76,6 +80,7 @@
                 android:inputType="none"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="@string/position" />
         </android.support.design.widget.TextInputLayout>
 
@@ -88,6 +93,7 @@
                 android:inputType="none"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="@string/location" />
         </android.support.design.widget.TextInputLayout>
     </LinearLayout>

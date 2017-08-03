@@ -3,6 +3,7 @@ package com.programacionymas.conciviles.ui.fragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.response.ProfileResponse;
+import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 import retrofit2.Call;
@@ -29,10 +31,9 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
         // Required empty public constructor
     }
 
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         fetchProfileData();
     }
@@ -57,10 +58,14 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
 
 
     private void fetchProfileData() {
-        final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
+        if (Global.isConnected(getContext())) {
+            final int user_id = Global.getIntFromPreferences(getActivity(), "user_id");
 
-        Call<ProfileResponse> call = MyApiAdapter.getApiService().getProfile(user_id);
-        call.enqueue(this);
+            Call<ProfileResponse> call = MyApiAdapter.getApiService().getProfile(user_id);
+            call.enqueue(this);
+        } else {
+            readProfileFromPreferences();
+        }
     }
 
     @Override
@@ -79,11 +84,44 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
                     .load(profileResponse.getImage())
                     .placeholder(R.mipmap.logo)
                     .into(imageView);
+
+            storeProfileInPreferences(profileResponse);
         }
     }
 
     @Override
     public void onFailure(Call<ProfileResponse> call, Throwable t) {
         Global.showMessageDialog(getContext(), "Error", "Ocurrió un error al obtener sus datos.");
+    }
+
+    private void storeProfileInPreferences(ProfileResponse profileResponse) {
+        Global.saveStringPreference(getActivity(), "profile_name", profileResponse.getName());
+        Global.saveStringPreference(getActivity(), "profile_email", profileResponse.getEmail());
+        Global.saveStringPreference(getActivity(), "profile_rol", profileResponse.getRol());
+        Global.saveStringPreference(getActivity(), "profile_department", profileResponse.getDepartment());
+        Global.saveStringPreference(getActivity(), "profile_position", profileResponse.getPosition());
+        Global.saveStringPreference(getActivity(), "profile_location", profileResponse.getLocation());
+        Global.saveStringPreference(getActivity(), "profile_image", profileResponse.getImage());
+    }
+
+    private void readProfileFromPreferences() {
+        final String name = Global.getStringFromPreferences(getActivity(), "profile_name");
+        final String email = Global.getStringFromPreferences(getActivity(), "profile_email");
+        final String rol = Global.getStringFromPreferences(getActivity(), "profile_rol");
+        final String department = Global.getStringFromPreferences(getActivity(), "profile_department");
+        final String position = Global.getStringFromPreferences(getActivity(), "profile_position");
+        final String location = Global.getStringFromPreferences(getActivity(), "profile_location");
+        final String image = Global.getStringFromPreferences(getActivity(), "profile_image");
+
+        etName.setText(name);
+        etEmail.setText(email);
+        etRol.setText(rol);
+        etDepartment.setText(department);
+        etPosition.setText(position);
+        etLocation.setText(location);
+
+        Picasso.with(getContext()).load(image)
+                .networkPolicy(NetworkPolicy.OFFLINE)
+                .placeholder(R.mipmap.logo).into(imageView);
     }
 }
