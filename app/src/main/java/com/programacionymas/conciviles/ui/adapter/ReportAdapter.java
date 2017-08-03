@@ -146,8 +146,9 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
             });
 
             final int authenticated_user_id = Global.getIntFromPreferences(activity, "user_id");
+            final boolean is_admin = Global.getBooleanFromPreferences(activity, "is_admin");
 
-            if ( authenticated_user_id == author_inform_id ||
+            if ( is_admin  || authenticated_user_id == author_inform_id ||
                     authenticated_user_id == currentReport.getUserId() ||
                     authenticated_user_id == currentReport.getResponsibleId() ) {
 

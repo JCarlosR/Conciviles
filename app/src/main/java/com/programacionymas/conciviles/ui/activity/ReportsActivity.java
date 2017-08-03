@@ -190,9 +190,10 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         final int user_id = Global.getIntFromPreferences(this, "user_id");
+        final boolean is_admin = Global.getBooleanFromPreferences(this, "is_admin");
 
         // only the on duty can add new reports to the inform (if it is active)
-        if (inform_editable && author_inform_id == user_id) {
+        if (inform_editable && (author_inform_id == user_id || is_admin )) {
             recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
             {
                 @Override

@@ -139,7 +139,7 @@ public class InformActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onFailure(Call<NewInformResponse> call, Throwable t) {
                 stopStoringState();
-                Toast.makeText(getApplicationContext(), "Respuesta del servidor desconocida", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "No se ha obtenido respuesta del servidor", Toast.LENGTH_SHORT).show();
             }
         });
 

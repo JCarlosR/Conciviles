@@ -127,6 +127,13 @@ public class Global {
         builder.show();
     }*/
 
+    public static void saveBooleanPreference(Context context, String key, boolean value) {
+        SharedPreferences sharedPref = context.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(key, value);
+        editor.apply();
+    }
+
     public static void saveIntPreference(Activity activity, String key, int value) {
         SharedPreferences sharedPref = activity.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -146,6 +153,11 @@ public class Global {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putLong(key, value);
         editor.apply();
+    }
+
+    public static boolean getBooleanFromPreferences(Context context, String key) {
+        SharedPreferences sharedPref = context.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(key, false);
     }
 
     public static int getIntFromPreferences(Activity activity, String key) {

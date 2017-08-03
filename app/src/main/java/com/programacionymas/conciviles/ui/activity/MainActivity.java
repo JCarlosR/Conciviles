@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
 import com.programacionymas.conciviles.Global;
@@ -56,8 +57,13 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
         if (response.isSuccessful()) {
             LoginResponse loginResponse = response.body();
             if (loginResponse.isSuccess()) {
-                int user_id = loginResponse.getUserId();
+
+                final int user_id = loginResponse.getUserId();
+                final boolean is_admin = loginResponse.isAdmin();
+
                 Global.saveIntPreference(this, "user_id", user_id);
+                Global.saveBooleanPreference(this, "is_admin", is_admin);
+
                 goToMenuActivity();
             } else {
                 Global.showMessageDialog(this, "Alerta", "Los datos ingresados no coinciden con ningún usuario.");
@@ -67,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
 
     @Override
     public void onFailure(Call<LoginResponse> call, Throwable t) {
-
+        Toast.makeText(this, "Verifique su conexión a internet", Toast.LENGTH_SHORT).show();
     }
 
     private void goToMenuActivity() {
