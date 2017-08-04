@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
 
     private void goToMenuActivity() {
         Intent intent = new Intent(this, MenuActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
+
 }

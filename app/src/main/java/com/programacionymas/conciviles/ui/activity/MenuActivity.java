@@ -125,12 +125,20 @@ public class MenuActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_logout) {
-            Global.saveIntPreference(this, "user_id", 0);
-            finish();
+            logout();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void logout() {
+        // clear preferences
+        Global.saveIntPreference(this, "user_id", 0);
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
