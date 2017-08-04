@@ -15,6 +15,8 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
@@ -97,6 +99,7 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
 
     // Request codes
     private static final int REQUEST_CAMERA_PERMISSION = 10;
+    private static final int REQUEST_READ_EXTERNAL_STORAGE_PERMISSION = 11;
     private static final int REQUEST_CAMERA = 20;
     private static final int SELECT_FILE = 21;
 
@@ -342,7 +345,6 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
 
         // Insert the new row, returning the primary key value of the new row
         long newRowId = db.insert(MyDbContract.AreaEntry.TABLE_NAME, null, values);
-
 */
 
         List<String> options = new ArrayList<String>();
@@ -668,34 +670,10 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
             public void onClick(DialogInterface dialog, int option) {
 
                 if (option == 0) {
-
-                    // check for permission for newer APIs
-                    if (Build.VERSION.SDK_INT >= 23) {
-                        // Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is TRUE");
-                        if (checkSelfPermission(Manifest.permission.CAMERA)
-                                == PackageManager.PERMISSION_GRANTED) {
-                            // permission granted
-                            // Log.d("ReportDialogFragment", "Camera permission already granted");
-                            startCameraIntent();
-                        } else {
-                            // Log.d("ReportDialogFragment", "Request camera permission fired");
-                            // request camera permission
-                            requestPermissions(new String[]{Manifest.permission.CAMERA},
-                                    REQUEST_CAMERA_PERMISSION);
-                        }
-                    } else {
-                        // Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is FALSE");
-                        // old APIs doesn't require to check for camera permission
-                        startCameraIntent();
-                    }
+                    takeImageUsingCamera();
 
                 } else if (option == 1) {
-                    Intent intent = new Intent(
-                            Intent.ACTION_PICK,
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    intent.setType("image/*");
-                    final String chooserTitle = getResources().getString(R.string.picture_chooser_title);
-                    startActivityForResult(Intent.createChooser(intent, chooserTitle), SELECT_FILE);
+                    takeImageFromGallery();
                 } else if (option == 2) {
                     dialog.dismiss();
                 }
@@ -706,39 +684,54 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
 
     }
 
-    private void startCameraIntent() {
-        // Create the File where the photo should go
-        /*File photoFile;
-        try {
-            photoFile = createDestinationFile();
-        } catch (IOException ex) {
-            return;
-        }*/
-
-        // Continue only if the File was successfully created
-        /*if (photoFile != null) {*/
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            // takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
-            startActivityForResult(takePictureIntent, REQUEST_CAMERA);
-        //}
+    private void takeImageUsingCamera() {
+        // check for permission for newer APIs
+        if (Build.VERSION.SDK_INT >= 23) {
+            // Log.d("ReportDialogFragment", "Build.VERSION.SDK_INT >= 23 is TRUE");
+            if (checkSelfPermission(Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED) {
+                // camera permission granted
+                startCameraIntent();
+            } else {
+                // request camera permission fired
+                requestPermissions(new String[]{Manifest.permission.CAMERA},
+                        REQUEST_CAMERA_PERMISSION);
+            }
+        } else {
+            // old APIs doesn't require to check for camera permission (it is granted from manifest)
+            startCameraIntent();
+        }
     }
 
-    /*private File createDestinationFile() throws IOException {
-        // Path for the temporary image and its name
-        final File storageDirectory = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        final String imageFileName = "" + System.currentTimeMillis();
+    private void takeImageFromGallery() {
+        // we have to check for permissions (newer APIs)
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                startActionPickIntent();
+            } else {
+                // request new permission
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_READ_EXTERNAL_STORAGE_PERMISSION);
+            }
+        } else {
+            // old APIs doesn't require to check for camera permission (it is granted from manifest)
+            startActionPickIntent();
+        }
+    }
 
-        File image = File.createTempFile(
-                imageFileName,          // prefix
-                "." + DEFAULT_EXTENSION, // suffix
-                storageDirectory              // directory
-        );
+    private void startCameraIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+    }
 
-        // Save a the file path
-        currentPhotoPath = image.getAbsolutePath();
-        return image;
-    }*/
+    private void startActionPickIntent() {
+        Intent intent = new Intent(
+                Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        final String chooserTitle = getResources().getString(R.string.picture_chooser_title);
+        startActivityForResult(Intent.createChooser(intent, chooserTitle), SELECT_FILE);
+    }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -759,6 +752,7 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
                 boolean deleted = new File(currentPhotoPath).delete();
                 if (! deleted)
                     Log.d("ReportDialogFragment", "Cannot delete file: " + currentPhotoPath);*/
+
             } else if (requestCode == SELECT_FILE) {
                 Uri selectedImageUri = data.getData();
                 String[] projection = { MediaStore.MediaColumns.DATA };
@@ -773,14 +767,34 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
                 // final int lastDot = selectedImagePath.lastIndexOf(".");
                 // final String extension = selectedImagePath.substring(lastDot+1);
 
-                Bitmap bitmap = BitmapFactory.decodeFile(selectedImagePath);
-                bitmap = Global.getThumbnailFromBitmap(bitmap);
-                ivTarget.setImageBitmap(bitmap);
+                Bitmap bitmap = decodeFileToBitmap(selectedImagePath);
+                if (bitmap == null) {
+                    Toast.makeText(this, "Memoria insuficiente para procesar la imagen seleccionada", Toast.LENGTH_SHORT).show();
+                } else {
+                    bitmap = Global.getThumbnailFromBitmap(bitmap);
+                    ivTarget.setImageBitmap(bitmap);
 
-                if (ivTarget == ivImage)
-                    image = Global.getBase64FromBitmap(bitmap);
-                else
-                    imageAction = Global.getBase64FromBitmap(bitmap);
+                    if (ivTarget == ivImage)
+                        image = Global.getBase64FromBitmap(bitmap);
+                    else
+                        imageAction = Global.getBase64FromBitmap(bitmap);
+                }
+            }
+        }
+    }
+
+    private Bitmap decodeFileToBitmap(final String imagePath) {
+        try {
+            // the normal approach
+            return BitmapFactory.decodeFile(imagePath);
+        } catch (OutOfMemoryError ome) {
+            // when the image itself is too big
+            try {
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = 2;
+                return BitmapFactory.decodeFile(imagePath, options);
+            } catch(Exception e) {
+                return null;
             }
         }
     }
@@ -788,13 +802,21 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Now user should be able to use camera
                 startCameraIntent();
             } else {
                 // Your app will not have this permission.
-                Global.showMessageDialog(this, "Alerta", "No podrás subir capturar fotos con la cámara hasta que otorgues este permiso a la aplicación.");
+                Global.showMessageDialog(this, "Alerta", "No podrás capturar fotos con la cámara hasta que otorgues este permiso a la aplicación.");
+            }
+
+        } else if (requestCode == REQUEST_READ_EXTERNAL_STORAGE_PERMISSION) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startActionPickIntent(); // show gallery
+            } else {
+                Global.showMessageDialog(this, "Alerta", "Debes otorgar este permiso a la aplicación para poder leer imágenes desde galería.");
             }
         }
     }

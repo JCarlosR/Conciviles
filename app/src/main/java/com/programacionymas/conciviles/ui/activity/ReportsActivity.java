@@ -43,6 +43,8 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
     private int author_inform_id;
     private boolean inform_editable;
 
+    private FloatingActionButton fab;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,7 +71,10 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        fetchSpinnerDataFromServer();
+        if (Global.isConnected(this))
+            fetchSpinnerDataFromServer();
+        else
+            checkIfSpinnerDataWasLoadedBefore();
     }
 
     private void fetchSpinnerDataFromServer() {
@@ -152,6 +157,20 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         });
     }
 
+    private void checkIfSpinnerDataWasLoadedBefore() {
+        final String workFrontsSerialized = Global.getStringFromPreferences(this, "work_fronts");
+        final String areasSerialized = Global.getStringFromPreferences(this, "areas");
+        final String responsibleUsersSerialized = Global.getStringFromPreferences(this, "responsible_users");
+        final String criticalRisksSerialized = Global.getStringFromPreferences(this, "critical_risks");
+
+        if (workFrontsSerialized.isEmpty() || areasSerialized.isEmpty()
+                || responsibleUsersSerialized.isEmpty()
+                || criticalRisksSerialized.isEmpty()) {
+            fab.setEnabled(false);
+            Toast.makeText(this, "No se ha podido obtener la información mínima para el registro de reportes", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public void reloadReportsForThisInformFromSQLite() {
         MyDbHelper myDbHelper = new MyDbHelper(this);
         ArrayList<Report> reports = myDbHelper.getReports(inform_id);
@@ -188,7 +207,7 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         adapter = new ReportAdapter(this, inform_id, author_inform_id, inform_editable);
         recyclerView.setAdapter(adapter);
 
-        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         final int user_id = Global.getIntFromPreferences(this, "user_id");
         final boolean is_admin = Global.getBooleanFromPreferences(this, "is_admin");
 
