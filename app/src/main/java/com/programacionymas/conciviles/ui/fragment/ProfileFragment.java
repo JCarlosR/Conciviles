@@ -82,7 +82,7 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
 
             Picasso.with(getContext())
                     .load(profileResponse.getImage())
-                    .placeholder(R.mipmap.logo)
+                    .placeholder(R.drawable.logo)
                     .into(imageView);
 
             storeProfileInPreferences(profileResponse);
@@ -122,6 +122,6 @@ public class ProfileFragment extends Fragment implements Callback<ProfileRespons
 
         Picasso.with(getContext()).load(image)
                 .networkPolicy(NetworkPolicy.OFFLINE)
-                .placeholder(R.mipmap.logo).into(imageView);
+                .placeholder(R.drawable.logo).into(imageView);
     }
 }
