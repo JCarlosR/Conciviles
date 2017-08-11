@@ -97,8 +97,9 @@ public class ShowReportActivity extends AppCompatActivity {
         tvObservations.setText(report.getObservations());
 
         final int authenticated_user_id = Global.getIntFromPreferences(this, "user_id");
+        final boolean is_admin = Global.getBooleanFromPreferences(this, "is_admin");
 
-        if (authenticated_user_id == inform_id ||
+        if (is_admin || authenticated_user_id == inform_id ||
                 authenticated_user_id == report.getUserId() ||
                 authenticated_user_id == report.getResponsibleId()) {
 
@@ -120,8 +121,12 @@ public class ShowReportActivity extends AppCompatActivity {
                     // Empty report_id => Register new report
                     Intent intent = new Intent(getApplicationContext(), ReportFormActivity.class);
                     intent.putExtra("inform_id", inform_id);
+                    intent.putExtra("_id", report.getRowId());
                     intent.putExtra("report_id", report.getId());
-                    startActivityForResult(intent, 1); // is just a dummy request code
+                    // the report has no id assigned, but it will be edited locally
+                    if (report.getId() == 0)
+                        intent.putExtra("local_edit", true);
+                    startActivity(intent);
                 }
             });
 

@@ -152,6 +152,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
                     authenticated_user_id == currentReport.getUserId() ||
                     authenticated_user_id == currentReport.getResponsibleId() ) {
 
+                holder.btnEditReport.setEnabled(true);
                 holder.btnEditReport.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -163,7 +164,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
                         // the report has no id assigned, but it will be edited locally
                         if (currentReport.getId() == 0)
                             intent.putExtra("local_edit", true);
-                        activity.startActivityForResult(intent, 1); // is just a dummy request code
+                        activity.startActivity(intent);
                     }
                 });
             } else {
