@@ -46,6 +46,8 @@ dependencies {
     //If you want to add a network helper
     compile 'com.facebook.stetho:stetho-okhttp:1.5.0'
 
+    compile 'com.google.firebase:firebase-messaging:10.2.6'
+
     testCompile 'junit:junit:4.12'
 }
 

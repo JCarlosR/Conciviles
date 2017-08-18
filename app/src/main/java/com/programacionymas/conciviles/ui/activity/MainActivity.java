@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements Callback<LoginRes
 
     @Override
     public void onFailure(Call<LoginResponse> call, Throwable t) {
-        Toast.makeText(this, "Verifique su conexión a internet", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.failure_retrofit_callback, Toast.LENGTH_SHORT).show();
     }
 
     private void goToMenuActivity() {

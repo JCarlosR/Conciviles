@@ -22,6 +22,7 @@ public class Inform {
     private String created_at;
     private String user_name;
     private boolean is_editable;
+    private String reports_updated_at;
 
     public int getUserId() {
         return user_id;
@@ -88,6 +89,12 @@ public class Inform {
         values.put(InformEntry.COLUMN_CREATED_AT, getCreatedAt());
         values.put(InformEntry.COLUMN_USER_NAME, getUserName());
         values.put(InformEntry.COLUMN_IS_EDITABLE, isEditable());
+        values.put(InformEntry.COLUMN_REPORTS_UPDATED_AT, getReportsUpdatedAt());
         return values;
     }
+
+    public String getReportsUpdatedAt() {
+        return reports_updated_at;
+    }
+
 }

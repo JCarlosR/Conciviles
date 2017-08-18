@@ -4,15 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -26,9 +22,14 @@ import android.widget.Toast;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
-import com.programacionymas.conciviles.io.service.MyService;
+import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.io.service.CheckForUpdatesService;
 import com.programacionymas.conciviles.ui.fragment.InformsFragment;
 import com.programacionymas.conciviles.ui.fragment.ProfileFragment;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MenuActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -41,10 +42,10 @@ public class MenuActivity extends AppCompatActivity
     };
 
     private void startServiceIfConnected() {
-        if (Global.isConnected(getApplicationContext())) {
+        if (Global.isConnected(this)) {
             final int user_id = Global.getIntFromPreferences(this, "user_id");
 
-            Intent serviceIntent = new Intent(this, MyService.class);
+            Intent serviceIntent = new Intent(this, CheckForUpdatesService.class);
             serviceIntent.putExtra("user_id", user_id);
             startService(serviceIntent);
         }
@@ -83,7 +84,7 @@ public class MenuActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Esta opción está en desarrollo", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Usa el menú lateral izquierdo ...", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -96,6 +97,40 @@ public class MenuActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        // Update the FCM token in the server when needed
+        updateFcmTokenInServer();
+    }
+
+    private void updateFcmTokenInServer() {
+        if (!Global.isConnected(this)) {
+            return; // stop impossible update action
+        }
+
+        final boolean shouldSendToken = Global.getBooleanFromPreferences(this, "should_send_fcm_token");
+        if (shouldSendToken) {
+            final int user_id = Global.getIntFromPreferences(this, "user_id");
+            final String token = Global.getStringFromPreferences(this, "fcm_token");
+            Call<Boolean> call = MyApiAdapter.getApiService().updateUserToken(user_id, token);
+            call.enqueue(new Callback<Boolean>() {
+                @Override
+                public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                    if (response.isSuccessful()) {
+                        Boolean tokenUpdated = response.body();
+                        if (tokenUpdated)
+                            Global.saveBooleanPreference(getApplicationContext(), "should_send_fcm_token", false);
+                    } else {
+                        Toast.makeText(MenuActivity.this, R.string.error_retrofit_response, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Boolean> call, Throwable t) {
+                    Toast.makeText(MenuActivity.this, R.string.error_retrofit_callback, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
     }
 
     @Override
@@ -118,9 +153,6 @@ public class MenuActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -155,7 +187,7 @@ public class MenuActivity extends AppCompatActivity
         } else if (id == R.id.nav_informs) {
             fragment = new InformsFragment();
         } else if (id == R.id.nav_sync) {
-            Toast.makeText(this, "La sincronización es automática al ingresar a la app siempre que haya conexión a internet :)", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "La sincronización es automática, y sólo descarga cuando es necesario :)", Toast.LENGTH_LONG).show();
         } else if (id == R.id.nav_send) {
 
         }

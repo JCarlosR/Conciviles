@@ -144,4 +144,11 @@ public interface MyApiService {
     Call<NewInformResponse> postNewInform(@Query("user_id") int user_id,
                                           @Query("from_date") String fromDate,
                                           @Query("to_date") String toDate);
+
+    // Register FCM token
+    @POST("fcm/token")
+    Call<Boolean> updateUserToken(@Query("user_id") int user_id,
+                                  @Query("fcm_token") String fcm_token);
+
+
 }

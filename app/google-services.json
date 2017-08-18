@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "563244575554",
+    "firebase_url": "https://on-duty-conciviles.firebaseio.com",
+    "project_id": "on-duty-conciviles",
+    "storage_bucket": "on-duty-conciviles.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:563244575554:android:ca2001eb0032523c",
+        "android_client_info": {
+          "package_name": "com.programacionymas.conciviles"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "563244575554-gtmkkf1haoflbv19ko9vmudu84181j31.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.programacionymas.conciviles",
+            "certificate_hash": "d4452327e1d55ed1f5a9fbbf7755173062ccfa2e"
+          }
+        },
+        {
+          "client_id": "563244575554-opdq4mhdljd463omb3ph8hlmsn0jcqi0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqJjtq5YRD1wtoqwFOwXJOMslSgEn-iCM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "563244575554-opdq4mhdljd463omb3ph8hlmsn0jcqi0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

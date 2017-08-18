@@ -2,6 +2,7 @@ package com.programacionymas.conciviles.model;
 
 import android.content.ContentValues;
 
+import com.google.gson.annotations.SerializedName;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.io.sqlite.MyDbContract.ReportEntry;
@@ -53,7 +54,10 @@ public class Report {
     private int work_front_id;
     private int area_id;
     private int responsible_id;
+
+    @SerializedName("informe_id") // someone used a spanglish term for this field
     private int inform_id;
+
     // base 64 images (only used for the offline storage)
     private String image_base64;
     private String image_action_base64;
@@ -214,7 +218,7 @@ public class Report {
         else
             values.put(ReportEntry.COLUMN_ID, getId());
 
-        values.put(ReportEntry.COLUMN_INFORM_ID, getInformId()); // it is not received from the API
+        values.put(ReportEntry.COLUMN_INFORM_ID, getInformId());
 
         values.put(ReportEntry.COLUMN_USER_ID, getUserId());
         values.put(ReportEntry.COLUMN_ASPECT, getAspect());

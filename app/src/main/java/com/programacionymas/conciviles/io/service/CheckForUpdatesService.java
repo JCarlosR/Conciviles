@@ -9,6 +9,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.programacionymas.conciviles.Global;
+import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.response.NewReportResponse;
 import com.programacionymas.conciviles.io.sqlite.MyDbContract;
@@ -25,14 +26,12 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
-public class MyService extends Service {
+public class CheckForUpdatesService extends Service {
     public Runnable mRunnable = null;
-    public MyService() {
+    public CheckForUpdatesService() {
 
     }
 
@@ -42,13 +41,12 @@ public class MyService extends Service {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    private static int user_id;
     private static boolean alreadyRunning = false;
-    private static int tries = 0;
-    private static boolean pendingRequests = false;
 
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
-        // end, to avoid execute onStartCommand multiple times (even simultaneously)
+        // avoid multiple executions of onStartCommand (even simultaneously)
         if (alreadyRunning) return super.onStartCommand(intent, flags, startId);
 
         alreadyRunning = true;
@@ -59,21 +57,20 @@ public class MyService extends Service {
             public void run() {
                 if (intent == null) return; // some strange cases
 
+                user_id = intent.getIntExtra("user_id", 0);
+                if (user_id==0) return; // it should not happen
+
                 MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
                 boolean isInfoAvailable = myHelper.isAnyInfoAvailable(MyDbContract.InformEntry.TABLE_NAME);
 
-                // Toast.makeText(getApplicationContext(), String.valueOf(isInfoAvailable), Toast.LENGTH_LONG).show();
-
-                if (!isInfoAvailable || hasPassedAtLeast2Mins())
-                    downloadInforms(intent.getIntExtra("user_id", 0));
-
-                if (! pendingRequests) { // THIS VARIABLE IS CURRENTLY USELESS: IN THE FUTURE I WILL ADD TRIES FOR EACH REPORT REQUEST
-                    // stop the service
-                    alreadyRunning = false;
-                    stopSelf();
+                if (!isInfoAvailable || differentLoggedUser()) {
+                    // if there is no info available, start a general download
+                    downloadAllInformsAndReports();
+                } else {
+                    downloadUpdatedInformation();
                 }
 
-                mHandler.postDelayed(mRunnable, 20 * 1000); // next delays are 20 seconds
+                // mHandler.postDelayed(mRunnable, 20 * 1000); // re-call
             }
         };
         mHandler.postDelayed(mRunnable, 10 * 1000); // first time with 10 seconds delay
@@ -81,7 +78,12 @@ public class MyService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private boolean hasPassedAtLeast2Mins() {
+    private boolean differentLoggedUser() {
+        final int last_download_user_id = Global.getIntFromPreferences(getApplicationContext(), "last_download_user_id");
+        return user_id != last_download_user_id;
+    }
+
+    private boolean hasPassedAtLeastSeconds(final int seconds) {
         long currentTime = new Date().getTime();
         // Last time saved in shared preference
         final long lastTime = Global.getLongFromPreferences(getApplicationContext(), "lastTime");
@@ -92,65 +94,117 @@ public class MyService extends Service {
             // Difference in seconds
             double diff = TimeUnit.MILLISECONDS.toSeconds(currentTime - lastTime);
 
-            return diff >= 2 * 60; // has passed 2 minutes or more
+            return diff >= seconds; // has passed X seconds or more
         }
     }
 
-    private void downloadInforms(final int user_id) {
-        if (user_id == 0) return;
+    private void downloadUpdatedInformation() {
+        if (!hasPassedAtLeastSeconds(30)) return; // min interval for re-check updates
 
-        Log.d("MyService", "Going to download informs");
+        Toast.makeText(this, R.string.performing_a_smart_download, Toast.LENGTH_SHORT).show();
+
+        // Check for updated informs (considering the latest 3)
+        Call<ArrayList<Inform>> call = MyApiAdapter.getApiService().getInformsByLocationOfUser(user_id);
+        call.enqueue(new Callback<ArrayList<Inform>>() {
+            @Override
+            public void onResponse(Call<ArrayList<Inform>> call, Response<ArrayList<Inform>> response) {
+                if (response.isSuccessful()) {
+
+                    ArrayList<Inform> informs = response.body();
+
+                    MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+
+                    // Get the local stored informs
+                    ArrayList<Inform> localInforms = myHelper.getInforms();
+
+                    // Which informs we currently have (?)
+                    ArrayList<Inform> informsToDownload = new ArrayList<>();
+                    for (Inform inform : informs) {
+                        boolean foundInform = false;
+                        for (Inform localInform : localInforms) {
+                            if (inform.getId() == localInform.getId()) {
+                                // if it is found, the download depends in the last updated reports
+                                if ( inform.getReportsUpdatedAt()!=null && localInform.getReportsUpdatedAt()!=null && // be careful with null values
+                                        ! inform.getReportsUpdatedAt().equals(localInform.getReportsUpdatedAt()) ) {// real condition
+
+                                    informsToDownload.add(inform);
+                                }
+                                foundInform = true;
+                                break;
+                            }
+                        }
+                        if (!foundInform) // recently created
+                            informsToDownload.add(inform);
+                    }
+
+                    // Replace the local stored informs
+                    myHelper.updateInformsTable(informs);
+                    notifyUiToUpdateInforms();
+
+                    // Now download the updated reports
+                    uploadLocalChangesAndNextDownloadReports(informsToDownload, 3);
+                } else {
+                    Toast.makeText(CheckForUpdatesService.this, R.string.failure_downloading_all_informs, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ArrayList<Inform>> call, Throwable t) {
+                Toast.makeText(CheckForUpdatesService.this, R.string.failure_downloading_all_informs, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void downloadAllInformsAndReports() {
+        Toast.makeText(this, R.string.performing_a_full_download, Toast.LENGTH_SHORT).show();
 
         Call<ArrayList<Inform>> call = MyApiAdapter.getApiService().getInformsByLocationOfUser(user_id);
         call.enqueue(new Callback<ArrayList<Inform>>() {
             @Override
             public void onResponse(Call<ArrayList<Inform>> call, Response<ArrayList<Inform>> response) {
                 if (response.isSuccessful()) {
-                    Log.d("MyService", "HTTP Request for informs performed");
+
                     ArrayList<Inform> informs = response.body();
+
                     MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
                     myHelper.updateInformsTable(informs);
-                    notifyInformsUiTobeUpdated();
+                    notifyUiToUpdateInforms();
 
                     // Continue downloading the reports
-                    syncOfflineReportsAndAfterwardsDownload(informs);
+                    uploadLocalChangesAndNextDownloadReports(informs, 3);
 
-                    // Save the time for the last download
+                    // Save the time for the last full-download
                     long currentTime = new Date().getTime();
                     Global.saveLongPreference(getApplicationContext(), "lastTime", currentTime);
 
-                    // Reset the tries count
-                    tries = 0;
                 } else {
-                    // try 3 times
-                    ++tries;
-                    if (tries == 3)
-                        stopSelf();
+                    Toast.makeText(CheckForUpdatesService.this, R.string.failure_downloading_all_informs, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ArrayList<Inform>> call, Throwable t) {
-                Toast.makeText(MyService.this, "No se ha podido actualizar la lista de informes.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(CheckForUpdatesService.this, R.string.failure_downloading_all_informs, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void notifyInformsUiTobeUpdated() {
+    private void notifyUiToUpdateInforms() {
         Intent intent = new Intent("event-update-informs");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        Log.d("MyService", "Broadcast to update informs sent");
+        // Log.d("MyService", "Broadcast to update informs sent");
     }
 
-    private void notifyReportsUiTobeUpdated(final int inform_id) {
+    private void notifyUiToUpdateReports(final int inform_id) {
         Intent intent = new Intent("event-update-reports");
+        intent.putExtra("inform_id", inform_id);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        Log.d("MyService", "Broadcast to update report sent (inform_id = "+inform_id+")");
+        // Log.d("MyService", "Broadcast to update reports was sent (inform_id = "+inform_id+")");
     }
 
-    private void syncOfflineReportsAndAfterwardsDownload(final ArrayList<Inform> informs) {
-        // TODO: create some logic to first pull and afterwards, push the local changes with confirmation dialogs
-        // AT LEAST FOR NOW: push the local changes and afterwards PULL all the reports
+    private void uploadLocalChangesAndNextDownloadReports(final ArrayList<Inform> informs, final int tries) {
+        // TODO: create some logic to first pull and next push the local changes with confirmation dialogs
+        // AT LEAST FOR NOW: push the local changes and next PULL all the reports
 
         final MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
 
@@ -160,7 +214,8 @@ public class MyService extends Service {
 
         myHelper.close();
 
-        Toast.makeText(this, "Sincronizando reportes (" + createdReports.size() + " nuevos y " + editedReports.size() + " editados).", Toast.LENGTH_LONG).show();
+        if (createdReports.size()>0 || editedReports.size()>0)
+            Toast.makeText(this, "Subiendo " + createdReports.size() + " reportes nuevos y " + editedReports.size() + " editados", Toast.LENGTH_SHORT).show();
 
         // it is necessary to subscribeOn a different thread (Retrofit doesn't handle it for Observables)
         Observable<NewReportResponse> createdReportsObs = Observable.from(createdReports) // .just() != .from()
@@ -185,28 +240,31 @@ public class MyService extends Service {
                 .subscribe(new Subscriber<NewReportResponse>() {
                     @Override
                     public void onCompleted() {
-                        downloadReportsByInform(informs);
+                        downloadReportsInTheseInforms(informs);
+                        Global.saveIntPreference(getApplicationContext(), "last_download_user_id", user_id);
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         try {
-                            // TODO: I have to mark as uploaded to server, each posted report, to avoid duplication in a re-send logic
-                            Toast.makeText(MyService.this, "Ha ocurrido un error sincronizando los reportes. Volviendo a intentar ...", Toast.LENGTH_LONG).show();
-                            syncOfflineReportsAndAfterwardsDownload(informs);
+                            // TODO: I have to mark as uploaded the reports sent successfully
+                            // to avoid duplication in a re-send logic
+                            Toast.makeText(CheckForUpdatesService.this, "Ha ocurrido un error enviando la información. Volviendo a intentar ...", Toast.LENGTH_LONG).show();
+                            uploadLocalChangesAndNextDownloadReports(informs, tries-1);
                         } catch (Throwable t) {
-                            Log.d("MyService", t.getLocalizedMessage());
+                            Toast.makeText(CheckForUpdatesService.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
                     public void onNext(NewReportResponse o) {
-                        // nothing to do between completed requests
+                        // delete the local changes that was uploaded successfully
+
                     }
                 });
     }
 
-    private void downloadReportsByInform(ArrayList<Inform> informs) {
+    private void downloadReportsInTheseInforms(ArrayList<Inform> informs) {
         final MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
 
         for (final Inform inform : informs) {
@@ -219,14 +277,15 @@ public class MyService extends Service {
                         ArrayList<Report> reports = response.body();
 
                         myHelper.updateReportsForInform(reports, inform.getId());
-                        notifyReportsUiTobeUpdated(inform.getId());
+                        notifyUiToUpdateReports(inform.getId());
                     }
                 }
                 @Override
                 public void onFailure(Call<ArrayList<Report>> call, Throwable t) {
-                    Toast.makeText(MyService.this, "No se han podido actualizar los reportes del informe "+inform.getId()+".", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CheckForUpdatesService.this, "No se han podido actualizar los reportes del informe "+inform.getId(), Toast.LENGTH_SHORT).show();
                 }
             });
         }
     }
+
 }

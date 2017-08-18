@@ -27,8 +27,6 @@ public class Global {
     }
 
     public static Bitmap getThumbnailFromBitmap(Bitmap bitmap) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
         double height = bitmap.getHeight();
         double width = bitmap.getWidth();
         double divisor = 2;
@@ -134,15 +132,15 @@ public class Global {
         editor.apply();
     }
 
-    public static void saveIntPreference(Activity activity, String key, int value) {
-        SharedPreferences sharedPref = activity.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
+    public static void saveIntPreference(Context context, String key, int value) {
+        SharedPreferences sharedPref = context.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt(key, value);
         editor.apply();
     }
 
-    public static void saveStringPreference(Activity activity, String key, String value) {
-        SharedPreferences sharedPref = activity.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
+    public static void saveStringPreference(Context context, String key, String value) {
+        SharedPreferences sharedPref = context.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(key, value);
         editor.apply();
@@ -160,8 +158,8 @@ public class Global {
         return sharedPref.getBoolean(key, false);
     }
 
-    public static int getIntFromPreferences(Activity activity, String key) {
-        SharedPreferences sharedPref = activity.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
+    public static int getIntFromPreferences(Context context, String key) {
+        SharedPreferences sharedPref = context.getSharedPreferences("global_preferences", Context.MODE_PRIVATE);
         return sharedPref.getInt(key, 0);
     }
 

@@ -15,7 +15,7 @@ import com.programacionymas.conciviles.model.Report;
 import java.util.ArrayList;
 
 public class MyDbHelper extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 8;
+    private static final int DATABASE_VERSION = 10;
     private static final String DATABASE_NAME = "pym.db";
 
     public MyDbHelper(Context context) {
@@ -35,9 +35,9 @@ public class MyDbHelper extends SQLiteOpenHelper {
                 InformEntry.COLUMN_TO_DATE + " TEXT," +
                 InformEntry.COLUMN_CREATED_AT + " TEXT," +
                 InformEntry.COLUMN_USER_NAME + " TEXT," +
+                InformEntry.COLUMN_REPORTS_UPDATED_AT + " TEXT," +
                 InformEntry.COLUMN_IS_EDITABLE + " INTEGER)"); // The children reports are editable for the authenticated user
-        // If this user is logged out, and reconnects with internet connection, all the info is fetched again
-        // But if the new authenticated user looses the connection immediately, probably it will be inconsistent
+        // If the user logged out, and reconnects, all the info is fetched again
 
         db.execSQL("CREATE TABLE " + ReportEntry.TABLE_NAME + " (" +
                 ReportEntry._ID + " INTEGER PRIMARY KEY," +
@@ -248,6 +248,17 @@ public class MyDbHelper extends SQLiteOpenHelper {
         // select one report by id
         String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME
                 + " WHERE " + ReportEntry._ID + " = " + _id;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        return getReportFromCursor(cursor);
+    }
+
+    public Report getReportById(final int id) {
+        // select one report by id
+        String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME
+                + " WHERE " + ReportEntry.COLUMN_ID + " = " + id;
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);

@@ -26,4 +26,5 @@ public class NewReportResponse {
     public String getFirstError() {
         return errors.get(0);
     }
+
 }

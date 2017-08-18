@@ -24,6 +24,7 @@ public final class MyDbContract {
         public static final String COLUMN_CREATED_AT = "created_at";
         public static final String COLUMN_USER_NAME = "user_name";
         public static final String COLUMN_IS_EDITABLE = "is_editable";
+        public static final String COLUMN_REPORTS_UPDATED_AT = "reports_updated_at"; // last change
     }
 
     public static class ReportEntry implements BaseColumns {
@@ -58,4 +59,5 @@ public final class MyDbContract {
         public static final String COLUMN_RESPONSIBLE_ID = "responsible_id";
         public static final String COLUMN_CRIT_RISKS_ID = "critical_risks_id";
     }
+
 }

@@ -317,9 +317,13 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
     public void onResume() {
         super.onResume();
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("event-update-reports"); // A new inform was downloaded
+        intentFilter.addAction("event-update-report"); // One report was created, updated or deleted
+
         // Register updateReportsReceiver to receive messages
         LocalBroadcastManager.getInstance(this).registerReceiver(
-                updateReportsReceiver, new IntentFilter("event-update-reports")
+                updateReportsReceiver, intentFilter
         );
     }
 
