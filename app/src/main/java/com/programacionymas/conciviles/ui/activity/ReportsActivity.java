@@ -177,7 +177,7 @@ public class ReportsActivity extends AppCompatActivity implements View.OnClickLi
         if (reports.size() > 0)
             adapter.setReportsData(reports);
         else
-            Global.showMessageDialog(this, "Error", "No se han podido obtener los reportes del informe seleccionado.");
+            Global.showMessageDialog(this, "Advertencia", "No se han encontrando reportes en el informe seleccionado.");
     }
 
     @Override

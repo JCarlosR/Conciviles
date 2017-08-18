@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
 import com.programacionymas.conciviles.io.sqlite.MyDbHelper;
@@ -31,7 +32,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
-            // Log.d(TAG, "Data payload: " + remoteMessage.getData());
+            Log.d(TAG, "Data payload: " + remoteMessage.getData());
             handleNow(remoteMessage.getData());
         }
 
@@ -39,22 +40,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         /*if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Notification Body: " + remoteMessage.getNotification().getBody());
         }*/
-
         // sendNotification(...)
     }
-
-
-    /*
-    private void scheduleJob() {
-        // [START dispatch_job]
-        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(this));
-        Job myJob = dispatcher.newJobBuilder()
-                .setService(MyJobService.class)
-                .setTag("my-job-tag")
-                .build();
-        dispatcher.schedule(myJob);
-        // [END dispatch_job]
-    }*/
 
     private void handleNow(Map<String, String> data) {
         String updatedEntity = data.get("updated_entity");
@@ -63,6 +50,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         if (updatedEntity.equals("report")) {
             updateReport(updatedId, action);
+        } else if (updatedEntity.equals("inform")) {
+            updateInform(updatedId, action);
         }
     }
 
@@ -110,6 +99,18 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         intent.putExtra("action", action);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         Log.d(TAG, "Broadcast to update report was sent (report_id = "+report_id+", inform_id = "+inform_id+")");
+    }
+
+    private void updateInform(final String informId, final String action) {
+        final int intInformId = Integer.parseInt(informId);
+
+        if (action.equals("saved")) {
+            downloadInform(intInformId);
+        }
+    }
+
+    private void downloadInform(final int informId) {
+        Global.checkForUpdates(getApplicationContext());
     }
 
     /*

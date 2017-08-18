@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -37,19 +38,9 @@ public class MenuActivity extends AppCompatActivity
     private BroadcastReceiver networkStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            startServiceIfConnected();
+            Global.checkForUpdates(context);
         }
     };
-
-    private void startServiceIfConnected() {
-        if (Global.isConnected(this)) {
-            final int user_id = Global.getIntFromPreferences(this, "user_id");
-
-            Intent serviceIntent = new Intent(this, CheckForUpdatesService.class);
-            serviceIntent.putExtra("user_id", user_id);
-            startService(serviceIntent);
-        }
-    }
 
     @Override
     public void onResume() {
@@ -74,8 +65,8 @@ public class MenuActivity extends AppCompatActivity
         if (user_id == 0)
             finish();
 
-        // Start service to download the informs periodically when it's possible and needed
-        startServiceIfConnected();
+        // Start service to download the informs if it's possible and needed
+        Global.checkForUpdates(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -173,9 +164,8 @@ public class MenuActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -187,9 +177,7 @@ public class MenuActivity extends AppCompatActivity
         } else if (id == R.id.nav_informs) {
             fragment = new InformsFragment();
         } else if (id == R.id.nav_sync) {
-            Toast.makeText(this, "La sincronización es automática, y sólo descarga cuando es necesario :)", Toast.LENGTH_LONG).show();
-        } else if (id == R.id.nav_send) {
-
+            syncData();
         }
 
         if (fragment != null) {
@@ -201,5 +189,12 @@ public class MenuActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void syncData() {
+        if (Global.isConnected(this))
+            Toast.makeText(this, "La app se sincroniza automáticamente, por favor espere", Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(this, "La app se sincronizará al detectar conexión a internet", Toast.LENGTH_SHORT).show();
     }
 }

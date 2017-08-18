@@ -70,7 +70,7 @@
     <string name="picture_chooser_title">Selecciona una imagen</string>
     <string name="failure_retrofit_callback">No fue posible establecer conexión con el servidor</string>
     <string name="failure_downloading_all_informs">No se pudo descargar la lista de informes</string>
-    <string name="performing_a_full_download">Descargando los últimos 3 informes y sus reportes</string>
+    <string name="performing_a_full_download">Actualizando el listado informes y sus reportes &#8230;</string>
     <string name="performing_a_smart_download">Verificando actualizaciones</string>
     <string name="error_retrofit_callback">Ocurrió un error al intentar conectarse con el servidor</string>
     <string name="error_retrofit_response">El servidor no ha respondido correctamente</string>

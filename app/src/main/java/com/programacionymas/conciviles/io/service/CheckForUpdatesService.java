@@ -31,8 +31,8 @@ import rx.schedulers.Schedulers;
 
 public class CheckForUpdatesService extends Service {
     public Runnable mRunnable = null;
-    public CheckForUpdatesService() {
 
+    public CheckForUpdatesService() {
     }
 
     @Override
@@ -51,31 +51,37 @@ public class CheckForUpdatesService extends Service {
 
         alreadyRunning = true;
 
+        if (intent != null)
+            user_id = intent.getIntExtra("user_id", 0);
+
+        if (user_id==0) // it should not happen
+            return super.onStartCommand(intent, flags, startId);;
+
         final Handler mHandler = new Handler();
         mRunnable = new Runnable() {
             @Override
             public void run() {
-                if (intent == null) return; // some strange cases
 
-                user_id = intent.getIntExtra("user_id", 0);
-                if (user_id==0) return; // it should not happen
-
-                MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
-                boolean isInfoAvailable = myHelper.isAnyInfoAvailable(MyDbContract.InformEntry.TABLE_NAME);
-
-                if (!isInfoAvailable || differentLoggedUser()) {
-                    // if there is no info available, start a general download
-                    downloadAllInformsAndReports();
-                } else {
-                    downloadUpdatedInformation();
-                }
-
+                checkForUpdatesAtInformLevel();
+                alreadyRunning = false;
                 // mHandler.postDelayed(mRunnable, 20 * 1000); // re-call
             }
         };
-        mHandler.postDelayed(mRunnable, 10 * 1000); // first time with 10 seconds delay
+        mHandler.postDelayed(mRunnable, 3 * 1000); // first time with 3 seconds delay
 
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void checkForUpdatesAtInformLevel() {
+        MyDbHelper myHelper = new MyDbHelper(getApplicationContext());
+        boolean isInfoAvailable = myHelper.isAnyInfoAvailable(MyDbContract.InformEntry.TABLE_NAME);
+
+        if (!isInfoAvailable || differentLoggedUser()) {
+            // if there is no info available, start a general download
+            downloadAllInformsAndReports();
+        } else {
+            downloadUpdatedInformation();
+        }
     }
 
     private boolean differentLoggedUser() {
@@ -99,7 +105,7 @@ public class CheckForUpdatesService extends Service {
     }
 
     private void downloadUpdatedInformation() {
-        if (!hasPassedAtLeastSeconds(30)) return; // min interval for re-check updates
+        if (!hasPassedAtLeastSeconds(5)) return; // min interval for re-check updates
 
         Toast.makeText(this, R.string.performing_a_smart_download, Toast.LENGTH_SHORT).show();
 
@@ -156,6 +162,8 @@ public class CheckForUpdatesService extends Service {
     }
 
     private void downloadAllInformsAndReports() {
+        if (!hasPassedAtLeastSeconds(12)) return; // min interval for repeat a general download
+
         Toast.makeText(this, R.string.performing_a_full_download, Toast.LENGTH_SHORT).show();
 
         Call<ArrayList<Inform>> call = MyApiAdapter.getApiService().getInformsByLocationOfUser(user_id);

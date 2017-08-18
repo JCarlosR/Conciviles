@@ -3,6 +3,7 @@ package com.programacionymas.conciviles;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Spinner;
+
+import com.programacionymas.conciviles.io.service.CheckForUpdatesService;
 
 import java.io.ByteArrayOutputStream;
 
@@ -181,5 +184,15 @@ public class Global {
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();
 
         return networkInfo != null && networkInfo.isConnectedOrConnecting();
+    }
+
+    public static void checkForUpdates(Context context) {
+        if (Global.isConnected(context)) {
+            final int user_id = Global.getIntFromPreferences(context, "user_id");
+
+            Intent serviceIntent = new Intent(context, CheckForUpdatesService.class);
+            serviceIntent.putExtra("user_id", user_id);
+            context.startService(serviceIntent);
+        }
     }
 }
