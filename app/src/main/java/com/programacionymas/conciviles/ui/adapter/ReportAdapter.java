@@ -164,7 +164,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
                         // the report has no id assigned, but it will be edited locally
                         if (currentReport.getId() == 0)
                             intent.putExtra("local_edit", true);
-                        activity.startActivity(intent);
+                        activity.startActivityForResult(intent, 1); // 1 is the request code
                     }
                 });
             } else {
