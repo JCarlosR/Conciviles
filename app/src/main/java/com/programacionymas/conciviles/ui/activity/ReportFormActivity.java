@@ -51,6 +51,7 @@ import com.programacionymas.conciviles.model.WorkFront;
 import com.programacionymas.conciviles.ui.fragment.DatePickerFragment;
 import com.squareup.picasso.Picasso;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -547,6 +548,10 @@ public class ReportFormActivity extends AppCompatActivity implements View.OnClic
         if (! Global.isConnected(this)) {
 
             MyDbHelper myHelper = new MyDbHelper(this);
+
+            // use a current timestamp temporarily
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            report.setCreatedAt(String.valueOf(timestamp));
 
             // If the report ID is ZERO, create a new record
             if (is_new) {

@@ -236,7 +236,8 @@ public class MyDbHelper extends SQLiteOpenHelper {
         // select all
         String selectQuery = "SELECT  * FROM " + ReportEntry.TABLE_NAME
                 + " WHERE " + ReportEntry.COLUMN_INFORM_ID + " = " + inform_id
-                + " ORDER BY " + ReportEntry.COLUMN_STATE + ", " + ReportEntry.COLUMN_CREATED_AT;
+                + " ORDER BY " + ReportEntry.COLUMN_STATE + ", "
+                + ReportEntry.COLUMN_CREATED_AT + " DESC";
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
