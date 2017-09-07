@@ -178,9 +178,12 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ViewHolder
 
     private void loadImageUsingPicasso(Report report, ViewHolder holder) {
         if (Global.isConnected(activity))
-            Picasso.with(activity).load(report.getImage()).into(holder.ivImage);
+            Picasso.with(activity).load(report.getImage())
+                    .placeholder(R.drawable.logo)
+                    .into(holder.ivImage);
         else
             Picasso.with(activity).load(report.getImage())
+                    .placeholder(R.drawable.logo)
                     .networkPolicy(NetworkPolicy.OFFLINE).into(holder.ivImage);
     }
 
