@@ -136,8 +136,12 @@ public class CheckForUpdatesService extends Service {
                         for (Inform localInform : localInforms) {
                             if (inform.getId() == localInform.getId()) {
                                 // if it is found, the download depends in the last updated reports
+                                /*if (inform.getId()==30) {
+                                    Log.d("debugInform30", "inform.getReportsUpdatedAt() => " + inform.getReportsUpdatedAt());
+                                    Log.d("debugInform30", "localInform.getReportsUpdatedAt() => " + localInform.getReportsUpdatedAt());
+                                }*/
                                 if ( inform.getReportsUpdatedAt()!=null && localInform.getReportsUpdatedAt()!=null && // be careful with null values
-                                        ! inform.getReportsUpdatedAt().equals(localInform.getReportsUpdatedAt()) ) {// real condition
+                                        ! inform.getReportsUpdatedAt().equals(localInform.getReportsUpdatedAt()) ) { // real condition
 
                                     informsToDownload.add(inform);
                                 }
@@ -226,8 +230,6 @@ public class CheckForUpdatesService extends Service {
         ArrayList<Report> createdReports = myHelper.getOfflineCreatedReports();
         ArrayList<Report> editedReports = myHelper.getOfflineEditedReports();
 
-        myHelper.close();
-
         if (createdReports.size()>0 || editedReports.size()>0)
             Toast.makeText(this, "Subiendo " + createdReports.size() + " reportes nuevos y " + editedReports.size() + " editados", Toast.LENGTH_SHORT).show();
 
@@ -256,6 +258,7 @@ public class CheckForUpdatesService extends Service {
                     public void onCompleted() {
                         // delete the offline created/edited reports
                         myHelper.deleteOfflineReports();
+                        Log.d("onCompleted changes", "offline reports were deleted, now " + informs.size() + " informs will be downloaded");
                         // because just only the informs with changes will be updated
                         downloadReportsInTheseInforms(informs);
                         Global.saveIntPreference(getApplicationContext(), "last_download_user_id", user_id);

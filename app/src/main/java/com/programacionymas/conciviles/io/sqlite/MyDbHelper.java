@@ -187,6 +187,12 @@ public class MyDbHelper extends SQLiteOpenHelper {
                         inform.setEditable(isEditable==1);
                     }
 
+                    columnIndex = cursor.getColumnIndex(InformEntry.COLUMN_REPORTS_UPDATED_AT);
+                    if (columnIndex > -1) {
+                        String reportsUpdatedAt = cursor.getString(columnIndex);
+                        inform.setReportsUpdatedAt(reportsUpdatedAt);
+                    }
+
                     // adding inform to list
                     informs.add(inform);
                 } while (cursor.moveToNext());

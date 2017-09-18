@@ -97,4 +97,7 @@ public class Inform {
         return reports_updated_at;
     }
 
+    public void setReportsUpdatedAt(String reportsUpdatedAt) {
+        this.reports_updated_at = reportsUpdatedAt;
+    }
 }
