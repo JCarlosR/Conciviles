@@ -216,6 +216,16 @@ public class MyDbHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void deleteOfflineReports() {
+        // they should be remove one by one after confirmation
+        SQLiteDatabase db = getWritableDatabase();
+
+        String whereClause = ReportEntry.COLUMN_OFFLINE_EDITED + "=1 OR " + ReportEntry.COLUMN_ID + " is NULL";
+
+        db.delete(ReportEntry.TABLE_NAME, whereClause, null);
+        db.close();
+    }
+
     public void insertReport(Report report) {
         SQLiteDatabase db = getWritableDatabase();
         db.insert(ReportEntry.TABLE_NAME, null, report.getContentValues());

@@ -36,6 +36,12 @@ public class CheckForUpdatesService extends Service {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        alreadyRunning = false;
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
@@ -248,6 +254,9 @@ public class CheckForUpdatesService extends Service {
                 .subscribe(new Subscriber<NewReportResponse>() {
                     @Override
                     public void onCompleted() {
+                        // delete the offline created/edited reports
+                        myHelper.deleteOfflineReports();
+                        // because just only the informs with changes will be updated
                         downloadReportsInTheseInforms(informs);
                         Global.saveIntPreference(getApplicationContext(), "last_download_user_id", user_id);
                     }
@@ -255,10 +264,9 @@ public class CheckForUpdatesService extends Service {
                     @Override
                     public void onError(Throwable e) {
                         try {
-                            // TODO: I have to mark as uploaded the reports sent successfully
-                            // to avoid duplication in a re-send logic
                             Toast.makeText(CheckForUpdatesService.this, "Ha ocurrido un error enviando la información. Volviendo a intentar ...", Toast.LENGTH_LONG).show();
-                            uploadLocalChangesAndNextDownloadReports(informs, tries-1);
+                            if (tries > 0)
+                                uploadLocalChangesAndNextDownloadReports(informs, tries-1);
                         } catch (Throwable t) {
                             Toast.makeText(CheckForUpdatesService.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                         }
@@ -267,7 +275,8 @@ public class CheckForUpdatesService extends Service {
                     @Override
                     public void onNext(NewReportResponse o) {
                         // delete the local changes that was uploaded successfully
-
+                        // to avoid duplication in a re-send logic
+                        // TODO: I have to mark as uploaded the reports sent successfully
                     }
                 });
     }
