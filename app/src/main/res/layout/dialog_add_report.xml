@@ -286,6 +286,10 @@
                     android:inputType="textMultiLine" />
             </android.support.design.widget.TextInputLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="400dp" />
+
         </LinearLayout>
 
     </android.support.v4.widget.NestedScrollView>

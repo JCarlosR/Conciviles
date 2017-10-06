@@ -2,16 +2,16 @@ package com.programacionymas.conciviles.ui.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -19,12 +19,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
-import com.programacionymas.conciviles.io.service.CheckForUpdatesService;
 import com.programacionymas.conciviles.ui.fragment.InformsFragment;
 import com.programacionymas.conciviles.ui.fragment.ProfileFragment;
 
@@ -192,9 +192,17 @@ public class MenuActivity extends AppCompatActivity
     }
 
     private void syncData() {
-        if (Global.isConnected(this))
-            Toast.makeText(this, "La app se sincroniza automáticamente, por favor espere", Toast.LENGTH_SHORT).show();
-        else
-            Toast.makeText(this, "La app se sincronizará al detectar conexión a internet", Toast.LENGTH_SHORT).show();
+        if (Global.isConnected(this)) {
+            Global.showConfirmationDialog(this, "Confirmar", "¿Está seguro que desea sincronizar manualmente?", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // Start service to download the informs if it's possible and needed
+                    Global.checkForUpdates(getApplicationContext());
+                }
+            });
+        } else {
+            Toast.makeText(this, "Esta acción requiere de conexión a internet", Toast.LENGTH_SHORT).show();
+        }
+
     }
 }
