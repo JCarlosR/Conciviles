@@ -16,8 +16,12 @@
         <menu>
             <item
                 android:id="@+id/nav_sync"
-                android:icon="@drawable/ic_menu_manage"
-                android:title="Sincronizar" />
+                android:icon="@drawable/ic_refresh_black"
+                android:title="Sincronizar ahora" />
+            <item
+                android:id="@+id/nav_stop_sync"
+                android:icon="@drawable/ic_cancel_black"
+                android:title="Detener actualizaciones" />
         </menu>
     </item>
 

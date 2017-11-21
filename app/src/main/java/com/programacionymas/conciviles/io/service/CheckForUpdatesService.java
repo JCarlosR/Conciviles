@@ -53,7 +53,10 @@ public class CheckForUpdatesService extends Service {
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
         // avoid multiple executions of onStartCommand (even simultaneously)
-        if (alreadyRunning) return super.onStartCommand(intent, flags, startId);
+        if (alreadyRunning) {
+            Toast.makeText(getApplicationContext(), "Ejecutando actualmente las actualizaciones ...", Toast.LENGTH_SHORT).show();
+            return super.onStartCommand(intent, flags, startId);
+        }
 
         alreadyRunning = true;
 
@@ -105,13 +108,16 @@ public class CheckForUpdatesService extends Service {
         } else {
             // Difference in seconds
             double diff = TimeUnit.MILLISECONDS.toSeconds(currentTime - lastTime);
-
             return diff >= seconds; // has passed X seconds or more
         }
     }
 
     private void downloadUpdatedInformation() {
-        if (!hasPassedAtLeastSeconds(5)) return; // min interval for re-check updates
+        if (!hasPassedAtLeastSeconds(5)) {
+            // min interval for re-check updates
+            Toast.makeText(getApplicationContext(), "Espere al menos 5 segundos antes de actualizar nuevamente", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Toast.makeText(this, R.string.performing_a_smart_download, Toast.LENGTH_SHORT).show();
 

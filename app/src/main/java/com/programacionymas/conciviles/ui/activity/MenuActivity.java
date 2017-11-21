@@ -25,6 +25,7 @@ import android.widget.Toast;
 import com.programacionymas.conciviles.Global;
 import com.programacionymas.conciviles.R;
 import com.programacionymas.conciviles.io.MyApiAdapter;
+import com.programacionymas.conciviles.io.service.CheckForUpdatesService;
 import com.programacionymas.conciviles.ui.fragment.InformsFragment;
 import com.programacionymas.conciviles.ui.fragment.ProfileFragment;
 
@@ -178,6 +179,8 @@ public class MenuActivity extends AppCompatActivity
             fragment = new InformsFragment();
         } else if (id == R.id.nav_sync) {
             syncData();
+        } else if (id == R.id.nav_stop_sync) {
+            stopSyncData();
         }
 
         if (fragment != null) {
@@ -193,7 +196,7 @@ public class MenuActivity extends AppCompatActivity
 
     private void syncData() {
         if (Global.isConnected(this)) {
-            Global.showConfirmationDialog(this, "Confirmar", "¿Está seguro que desea sincronizar manualmente?", new DialogInterface.OnClickListener() {
+            Global.showConfirmationDialog(this, "¿Está seguro que desea sincronizar manualmente?", "En caso que no actualice adecuadamente, use la opción Detener actualizaciones, e intente nuevamente.", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     // Start service to download the informs if it's possible and needed
@@ -203,6 +206,15 @@ public class MenuActivity extends AppCompatActivity
         } else {
             Toast.makeText(this, "Esta acción requiere de conexión a internet", Toast.LENGTH_SHORT).show();
         }
+    }
 
+    private void stopSyncData() {
+        Global.showConfirmationDialog(this, "Confirmar", "¿Está seguro que desea detener la sincronización actual?", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                // Force and stop CheckForUpdates service
+                stopService(new Intent(MenuActivity.this, CheckForUpdatesService.class));
+            }
+        });
     }
 }
